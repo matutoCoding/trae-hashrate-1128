@@ -30,11 +30,12 @@ const StandbyPage: React.FC = () => {
     initStandby,
     checkAndExpireNotifications,
     getUserQueuePositions,
-    getAllSlotFlowEvents
+    getAllSlotFlowEvents,
+    getSlotFlowGroups
   } = useStandbyStore();
   const { studios, fetchStudios, initStudios } = useStudioStore();
 
-  const [activeTab, setActiveTab] = useState<'queue' | 'my'>('queue');
+  const [activeTab, setActiveTab] = useState<'queue' | 'my' | 'tracking'>('queue');
   const [countdown, setCountdown] = useState<number>(0);
 
   const myRecords = standbyRecords.filter(s => s.userId === 'user-current');
@@ -232,6 +233,12 @@ const StandbyPage: React.FC = () => {
           onClick={() => setActiveTab('my')}
         >
           <Text className={styles.tabText}>我的候补</Text>
+        </View>
+        <View
+          className={classnames(styles.tabItem, activeTab === 'tracking' && styles.active)}
+          onClick={() => setActiveTab('tracking')}
+        >
+          <Text className={styles.tabText}>空位追踪</Text>
         </View>
       </View>
 

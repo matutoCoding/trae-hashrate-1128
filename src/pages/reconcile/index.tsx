@@ -96,6 +96,12 @@ const ReconcilePage: React.FC = () => {
     });
   };
 
+  const handleViewPaymentWorkbench = () => {
+    Taro.navigateTo({
+      url: '/pages/payment-workbench/index'
+    });
+  };
+
   const handleViewFlowDetail = (orderNo: string) => {
     Taro.navigateTo({
       url: `/pages/flow-detail/index?orderNo=${orderNo}`
@@ -209,6 +215,17 @@ const ReconcilePage: React.FC = () => {
               <View className={styles.settlementContent}>
                 <Text className={styles.settlementTitle}>摄影师结算汇总</Text>
                 <Text className={styles.settlementDesc}>按摄影师查看收入、支出与差异明细</Text>
+              </View>
+              <Text className={styles.settlementArrow}>›</Text>
+            </View>
+
+            <View className={classnames(styles.settlementEntry, styles.paymentEntry)} onClick={handleViewPaymentWorkbench}>
+              <View className={classnames(styles.settlementIcon, styles.paymentIcon)}>
+                <Text>💳</Text>
+              </View>
+              <View className={styles.settlementContent}>
+                <Text className={styles.settlementTitle}>打款工作台</Text>
+                <Text className={styles.settlementDesc}>批量管理结算单，批量确认打款</Text>
               </View>
               <Text className={styles.settlementArrow}>›</Text>
             </View>

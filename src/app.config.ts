@@ -6,6 +6,7 @@ export default defineAppConfig({
     'pages/discrepancy/index',
     'pages/settlement/index',
     'pages/settlement-detail/index',
+    'pages/payment-workbench/index',
     'pages/studio-detail/index',
     'pages/booking-confirm/index',
     'pages/order-list/index',

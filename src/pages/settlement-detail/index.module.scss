@@ -49,6 +49,45 @@
   opacity: 0.9;
 }
 
+.dateRangeLabel {
+  font-size: $font-size-sm;
+  opacity: 0.9;
+}
+
+.datePickerRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+}
+
+.datePickerItem {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: $radius-md;
+  padding: $spacing-sm $spacing-md;
+  text-align: center;
+  backdrop-filter: blur(10px);
+}
+
+.datePickerLabel {
+  font-size: $font-size-xs;
+  opacity: 0.9;
+  margin-bottom: 4rpx;
+  display: block;
+}
+
+.datePickerValue {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+}
+
+.dateSeparator {
+  font-size: $font-size-md;
+  opacity: 0.8;
+  margin-top: $spacing-md;
+}
+
 .summaryGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

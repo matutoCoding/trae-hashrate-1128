@@ -24,9 +24,11 @@ const SettlementDetailPage: React.FC = () => {
 
   const photographerId = router.params.photographerId || '';
   const photographerName = decodeURIComponent(router.params.photographerName || '');
-  const startDate = router.params.startDate || '';
-  const endDate = router.params.endDate || '';
+  const initialStartDate = router.params.startDate || '';
+  const initialEndDate = router.params.endDate || '';
 
+  const [startDate, setStartDate] = useState<string>(initialStartDate);
+  const [endDate, setEndDate] = useState<string>(initialEndDate);
   const [activeTab, setActiveTab] = useState<'flows' | 'discrepancies' | 'sheets'>('sheets');
 
   const data = useMemo(() => {
@@ -142,10 +144,32 @@ const SettlementDetailPage: React.FC = () => {
           </View>
           <View className={styles.photographerInfo}>
             <Text className={styles.photographerName}>{photographerName}</Text>
-            <Text className={styles.dateRange}>
-              {startDate} 至 {endDate}
-            </Text>
+            <Text className={styles.dateRangeLabel}>结算周期</Text>
           </View>
+        </View>
+
+        <View className={styles.datePickerRow}>
+          <picker
+            mode="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.detail.value)}
+          >
+            <View className={styles.datePickerItem}>
+              <Text className={styles.datePickerLabel}>开始日期</Text>
+              <Text className={styles.datePickerValue}>{startDate || '请选择'}</Text>
+            </View>
+          </picker>
+          <Text className={styles.dateSeparator}>至</Text>
+          <picker
+            mode="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.detail.value)}
+          >
+            <View className={styles.datePickerItem}>
+              <Text className={styles.datePickerLabel}>结束日期</Text>
+              <Text className={styles.datePickerValue}>{endDate || '请选择'}</Text>
+            </View>
+          </picker>
         </View>
 
         <View className={styles.summaryGrid}>

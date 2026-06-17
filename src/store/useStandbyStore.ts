@@ -33,6 +33,17 @@ interface StandbyState {
   getSlotFlowEvents: (studioId: string, date: string, startTime: string) => SlotFlowEvent[];
   getAllSlotFlowEvents: () => SlotFlowEvent[];
   getSlotCurrentHolder: (studioId: string, date: string, startTime: string) => { userId: string; userName: string; status: string } | null;
+  getSlotFlowGroups: () => {
+    key: string;
+    studioId: string;
+    studioName: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    events: SlotFlowEvent[];
+    currentHolder: { userId: string; userName: string; status: string } | null;
+    latestEventTime: string;
+  }[];
 }
 
 export const useStandbyStore = create<StandbyState>((set, get) => ({
@@ -539,5 +550,52 @@ export const useStandbyStore = create<StandbyState>((set, get) => ({
     }
 
     return null;
+  },
+
+  getSlotFlowGroups: () => {
+    const { slotFlowEvents } = get();
+    const groups = new Map<string, {
+      key: string;
+      studioId: string;
+      studioName: string;
+      date: string;
+      startTime: string;
+      endTime: string;
+      events: SlotFlowEvent[];
+      currentHolder: { userId: string; userName: string; status: string } | null;
+      latestEventTime: string;
+    }>();
+
+    slotFlowEvents.forEach(event => {
+      const key = `${event.studioId}-${event.date}-${event.startTime}`;
+      if (!groups.has(key)) {
+        groups.set(key, {
+          key,
+          studioId: event.studioId,
+          studioName: event.studioName,
+          date: event.date,
+          startTime: event.startTime,
+          endTime: event.endTime,
+          events: [],
+          currentHolder: null,
+          latestEventTime: event.createdAt
+        });
+      }
+      const group = groups.get(key)!;
+      group.events.push(event);
+      if (new Date(event.createdAt).getTime() > new Date(group.latestEventTime).getTime()) {
+        group.latestEventTime = event.createdAt;
+      }
+    });
+
+    const result = Array.from(groups.values()).map(g => {
+      g.events.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      g.currentHolder = get().getSlotCurrentHolder(g.studioId, g.date, g.startTime);
+      return g;
+    });
+
+    return result.sort((a, b) =>
+      new Date(b.latestEventTime).getTime() - new Date(a.latestEventTime).getTime()
+    );
   }
 }));
