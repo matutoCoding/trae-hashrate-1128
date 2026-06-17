@@ -47,3 +47,47 @@ export interface StandbyNotification {
   read: boolean;
   createdAt: string;
 }
+
+export type SlotFlowEventType = 'released' | 'notified' | 'confirmed' | 'abandoned' | 'expired' | 'timeout_released';
+
+export interface SlotFlowEvent {
+  id: string;
+  studioId: string;
+  studioName: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  eventType: SlotFlowEventType;
+  userId?: string;
+  userName?: string;
+  queuePosition?: number;
+  description: string;
+  createdAt: string;
+}
+
+export const SLOT_FLOW_EVENT_TEXT: Record<SlotFlowEventType, string> = {
+  released: '超时释放',
+  notified: '通知候补',
+  confirmed: '候补确认',
+  abandoned: '主动放弃',
+  expired: '通知超时',
+  timeout_released: '超时自动释放'
+};
+
+export const SLOT_FLOW_EVENT_COLOR: Record<SlotFlowEventType, string> = {
+  released: '#DC2626',
+  notified: '#2563EB',
+  confirmed: '#059669',
+  abandoned: '#D97706',
+  expired: '#64748B',
+  timeout_released: '#94A3B8'
+};
+
+export const SLOT_FLOW_EVENT_ICON: Record<SlotFlowEventType, string> = {
+  released: '🔓',
+  notified: '📨',
+  confirmed: '✅',
+  abandoned: '🚫',
+  expired: '⏰',
+  timeout_released: '⏳'
+};

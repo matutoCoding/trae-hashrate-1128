@@ -430,3 +430,104 @@
   font-size: $font-size-sm;
   color: $color-text-tertiary;
 }
+
+.slotFlowEmpty {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-xxl $spacing-lg;
+  text-align: center;
+  box-shadow: $shadow-card;
+}
+
+.slotFlowEmptyText {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.slotFlowEmptySubtext {
+  font-size: $font-size-sm;
+  color: $color-text-quaternary;
+  display: block;
+}
+
+.slotFlowCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.slotFlowItem {
+  display: flex;
+  gap: $spacing-md;
+  padding: $spacing-sm 0;
+
+  &:not(:last-child) {
+    border-bottom: 1rpx solid $color-divider;
+  }
+}
+
+.slotFlowDotLine {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 6rpx;
+}
+
+.slotFlowDot {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.slotFlowContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.slotFlowHeader {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.slotFlowIcon {
+  font-size: $font-size-sm;
+}
+
+.slotFlowType {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+}
+
+.slotFlowStudio {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-left: auto;
+}
+
+.slotFlowDesc {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+}
+
+.slotFlowMeta {
+  display: flex;
+  gap: $spacing-md;
+  align-items: center;
+}
+
+.slotFlowTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.slotFlowCreatedAt {
+  font-size: $font-size-xs;
+  color: $color-text-quaternary;
+}

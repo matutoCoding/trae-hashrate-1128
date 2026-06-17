@@ -1,30 +1,42 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView } from '@tarojs/components';
+import { View, Text, ScrollView, Button } from '@tarojs/components';
 import Taro, { useDidShow, useRouter } from '@tarojs/taro';
 import styles from './index.module.scss';
 import classnames from 'classnames';
 
 import { useReconcileStore } from '@/store/useReconcileStore';
-import { FlowRecord, DiscrepancyRecord } from '@/types/reconcile';
+import { FlowRecord, DiscrepancyRecord, SettlementSheet, SETTLEMENT_SHEET_STATUS_TEXT, SETTLEMENT_SHEET_STATUS_COLOR } from '@/types/reconcile';
 import { DISCREPANCY_TYPE_TEXT, DISCREPANCY_STATUS_TEXT, DISCREPANCY_STATUS_COLOR } from '@/types/reconcile';
 import { formatCurrency } from '@/utils/amount';
 import { formatDateTime } from '@/utils/date';
 
 const SettlementDetailPage: React.FC = () => {
   const router = useRouter();
-  const { getSettlementByPhotographer } = useReconcileStore();
+  const {
+    getSettlementByPhotographer,
+    createSettlementSheet,
+    confirmSettlementSheet,
+    markSettlementPaid,
+    cancelSettlementSheet,
+    getSettlementSheets,
+    initReconcile
+  } = useReconcileStore();
 
   const photographerId = router.params.photographerId || '';
   const photographerName = decodeURIComponent(router.params.photographerName || '');
   const startDate = router.params.startDate || '';
   const endDate = router.params.endDate || '';
 
-  const [activeTab, setActiveTab] = useState<'flows' | 'discrepancies'>('flows');
+  const [activeTab, setActiveTab] = useState<'flows' | 'discrepancies' | 'sheets'>('sheets');
 
   const data = useMemo(() => {
     if (!photographerId) return null;
     return getSettlementByPhotographer(photographerId, startDate, endDate);
   }, [photographerId, startDate, endDate, getSettlementByPhotographer]);
+
+  const sheets = useMemo(() => {
+    return getSettlementSheets(photographerId);
+  }, [photographerId, getSettlementSheets]);
 
   React.useEffect(() => {
     if (photographerName) {
@@ -33,18 +45,79 @@ const SettlementDetailPage: React.FC = () => {
   }, [photographerName]);
 
   useDidShow(() => {
-    // 数据已通过 useMemo 自动更新
+    initReconcile();
   });
 
   const handleViewFlowDetail = (flow: FlowRecord) => {
     Taro.navigateTo({
-      url: `/pages/flow-detail/index?id=${flow.id}&source=${flow.source}`
+      url: `/pages/flow-detail/index?orderNo=${flow.orderNo}&source=${flow.source}`
     });
   };
 
   const handleViewDiscrepancy = (discrepancy: DiscrepancyRecord) => {
     Taro.navigateTo({
       url: `/pages/discrepancy-detail/index?id=${discrepancy.id}`
+    });
+  };
+
+  const handleCreateSheet = () => {
+    Taro.showModal({
+      title: '生成结算单',
+      content: `将为 ${photographerName} 生成 ${startDate} 至 ${endDate} 的结算单，确认生成？`,
+      confirmText: '确认生成',
+      confirmColor: '#2563EB',
+      success: (res) => {
+        if (res.confirm) {
+          createSettlementSheet(photographerId, photographerName, startDate, endDate, '当前用户');
+          Taro.showToast({ title: '结算单已生成', icon: 'success' });
+          setActiveTab('sheets');
+        }
+      }
+    });
+  };
+
+  const handleConfirmSheet = (sheetId: string) => {
+    Taro.showModal({
+      title: '确认结算单',
+      content: '确认后将进入待打款状态，确认操作？',
+      confirmText: '确认',
+      confirmColor: '#2563EB',
+      success: (res) => {
+        if (res.confirm) {
+          const ok = confirmSettlementSheet(sheetId);
+          Taro.showToast({ title: ok ? '已确认，待打款' : '操作失败', icon: ok ? 'success' : 'error' });
+        }
+      }
+    });
+  };
+
+  const handleMarkPaid = (sheetId: string) => {
+    Taro.showModal({
+      title: '确认打款',
+      content: '确认已完成打款？此操作不可撤销。',
+      confirmText: '确认打款',
+      confirmColor: '#059669',
+      success: (res) => {
+        if (res.confirm) {
+          const ok = markSettlementPaid(sheetId);
+          Taro.showToast({ title: ok ? '已标记打款' : '操作失败', icon: ok ? 'success' : 'error' });
+        }
+      }
+    });
+  };
+
+  const handleCancelSheet = (sheetId: string) => {
+    Taro.showModal({
+      title: '取消结算单',
+      content: '确定要取消此结算单吗？',
+      confirmText: '确认取消',
+      confirmColor: '#DC2626',
+      success: (res) => {
+        if (res.confirm) {
+          const ok = cancelSettlementSheet(sheetId);
+          Taro.showToast({ title: ok ? '已取消' : '操作失败', icon: ok ? 'success' : 'error' });
+        }
+      }
     });
   };
 
@@ -129,6 +202,13 @@ const SettlementDetailPage: React.FC = () => {
 
       <View className={styles.tabBar}>
         <View
+          className={classnames(styles.tabItem, activeTab === 'sheets' && styles.active)}
+          onClick={() => setActiveTab('sheets')}
+        >
+          <Text className={styles.tabText}>结算单</Text>
+          <Text className={styles.tabCount}>{sheets.length}</Text>
+        </View>
+        <View
           className={classnames(styles.tabItem, activeTab === 'flows' && styles.active)}
           onClick={() => setActiveTab('flows')}
         >
@@ -145,6 +225,122 @@ const SettlementDetailPage: React.FC = () => {
       </View>
 
       <ScrollView scrollY className={styles.content}>
+        {activeTab === 'sheets' && (
+          <View className={styles.listContainer}>
+            <View className={styles.createSheetCard} onClick={handleCreateSheet}>
+              <View className={styles.createSheetIcon}>
+                <Text className={styles.createSheetIconText}>+</Text>
+              </View>
+              <View className={styles.createSheetContent}>
+                <Text className={styles.createSheetTitle}>生成结算单</Text>
+                <Text className={styles.createSheetDesc}>
+                  {startDate} 至 {endDate} 期间数据
+                </Text>
+              </View>
+            </View>
+
+            {sheets.length === 0 ? (
+              <View className={styles.emptyState}>
+                <Text className={styles.emptyIcon}>📄</Text>
+                <Text className={styles.emptyText}>暂无结算单</Text>
+                <Text className={styles.emptySubtext}>点击上方按钮生成结算单</Text>
+              </View>
+            ) : (
+              sheets.map((sheet: SettlementSheet) => (
+                <View key={sheet.id} className={styles.sheetCard}>
+                  <View className={styles.sheetHeader}>
+                    <View className={styles.sheetInfo}>
+                      <Text className={styles.sheetId}>结算单 {sheet.id.slice(-6)}</Text>
+                      <Text className={styles.sheetPeriod}>{sheet.startDate} 至 {sheet.endDate}</Text>
+                    </View>
+                    <Text
+                      className={styles.sheetStatus}
+                      style={{ color: SETTLEMENT_SHEET_STATUS_COLOR[sheet.status] }}
+                    >
+                      {SETTLEMENT_SHEET_STATUS_TEXT[sheet.status]}
+                    </Text>
+                  </View>
+
+                  <View className={styles.sheetBody}>
+                    <View className={styles.sheetAmountRow}>
+                      <View className={styles.sheetAmountItem}>
+                        <Text className={styles.sheetAmountLabel}>平台应收</Text>
+                        <Text className={styles.sheetAmountValue}>{formatCurrency(sheet.platformReceivable)}</Text>
+                      </View>
+                      <View className={styles.sheetAmountItem}>
+                        <Text className={styles.sheetAmountLabel}>摄影师应收</Text>
+                        <Text className={styles.sheetAmountValue}>{formatCurrency(sheet.photographerReceivable)}</Text>
+                      </View>
+                    </View>
+                    <View className={styles.sheetAmountRow}>
+                      <View className={styles.sheetAmountItem}>
+                        <Text className={styles.sheetAmountLabel}>差额调整</Text>
+                        <Text className={classnames(styles.sheetAmountValue, Math.abs(sheet.diffAdjustment) > 0 && styles.hasDiff)}>
+                          {sheet.diffAdjustment > 0 ? '+' : ''}{formatCurrency(sheet.diffAdjustment)}
+                        </Text>
+                      </View>
+                      <View className={styles.sheetAmountItem}>
+                        <Text className={styles.sheetAmountLabel}>调整后应付</Text>
+                        <Text className={classnames(styles.sheetAmountValue, styles.bold)}>
+                          {formatCurrency(sheet.adjustedAmount)}
+                        </Text>
+                      </View>
+                    </View>
+                    {sheet.pendingDiscrepancyCount > 0 && (
+                      <View className={styles.sheetWarning}>
+                        <Text className={styles.sheetWarningText}>
+                          尚有 {sheet.pendingDiscrepancyCount} 条待处理差异，建议处理后再确认
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+
+                  <View className={styles.sheetFooter}>
+                    <Text className={styles.sheetDate}>创建时间：{formatDateTime(sheet.createdAt)}</Text>
+                    <View className={styles.sheetActions}>
+                      {sheet.status === 'draft' && (
+                        <>
+                          <Button
+                            className={classnames(styles.sheetActionBtn, styles.cancelActionBtn)}
+                            onClick={() => handleCancelSheet(sheet.id)}
+                          >
+                            <Text>取消</Text>
+                          </Button>
+                          <Button
+                            className={classnames(styles.sheetActionBtn, styles.confirmActionBtn)}
+                            onClick={() => handleConfirmSheet(sheet.id)}
+                          >
+                            <Text>确认</Text>
+                          </Button>
+                        </>
+                      )}
+                      {sheet.status === 'pending_payment' && (
+                        <>
+                          <Button
+                            className={classnames(styles.sheetActionBtn, styles.cancelActionBtn)}
+                            onClick={() => handleCancelSheet(sheet.id)}
+                          >
+                            <Text>取消</Text>
+                          </Button>
+                          <Button
+                            className={classnames(styles.sheetActionBtn, styles.paidActionBtn)}
+                            onClick={() => handleMarkPaid(sheet.id)}
+                          >
+                            <Text>确认打款</Text>
+                          </Button>
+                        </>
+                      )}
+                      {sheet.status === 'paid' && (
+                        <Text className={styles.sheetPaidLabel}>已打款 {sheet.paidAt ? formatDateTime(sheet.paidAt) : ''}</Text>
+                      )}
+                    </View>
+                  </View>
+                </View>
+              ))
+            )}
+          </View>
+        )}
+
         {activeTab === 'flows' && (
           <View className={styles.listContainer}>
             {flows.length === 0 ? (

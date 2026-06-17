@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { StandbyRecord, StandbyNotification } from '@/types/standby';
+import { StandbyRecord, StandbyNotification, SlotFlowEvent } from '@/types/standby';
 import {
   mockStandbyRecords,
   mockStandbyNotifications
@@ -8,6 +8,7 @@ import {
 interface StandbyState {
   standbyRecords: StandbyRecord[];
   notifications: StandbyNotification[];
+  slotFlowEvents: SlotFlowEvent[];
   loading: boolean;
   currentStandby: StandbyRecord | null;
   initialized: boolean;
@@ -28,11 +29,16 @@ interface StandbyState {
   getUserQueuePositions: (userId: string) => { standbyId: string; position: number; total: number }[];
   expireStandby: (standbyId: string) => boolean;
   checkAndExpireNotifications: () => StandbyRecord[];
+  addSlotFlowEvent: (event: Omit<SlotFlowEvent, 'id' | 'createdAt'>) => void;
+  getSlotFlowEvents: (studioId: string, date: string, startTime: string) => SlotFlowEvent[];
+  getAllSlotFlowEvents: () => SlotFlowEvent[];
+  getSlotCurrentHolder: (studioId: string, date: string, startTime: string) => { userId: string; userName: string; status: string } | null;
 }
 
 export const useStandbyStore = create<StandbyState>((set, get) => ({
   standbyRecords: [],
   notifications: [],
+  slotFlowEvents: [],
   loading: false,
   currentStandby: null,
   initialized: false,
@@ -154,25 +160,27 @@ export const useStandbyStore = create<StandbyState>((set, get) => ({
     let confirmedStandby: StandbyRecord | null = null;
 
     set(state => {
-      const updated = state.standbyRecords.map(s => {
+      const updated: StandbyRecord[] = state.standbyRecords.map(s => {
         if (s.id === standbyId) {
-          confirmedStandby = {
+          const confirmed: StandbyRecord = {
             ...s,
             status: 'confirmed',
             confirmedAt: new Date().toISOString()
           };
-          return confirmedStandby;
+          confirmedStandby = confirmed;
+          return confirmed;
         }
         return s;
       });
 
       if (confirmedStandby) {
+        const cs = confirmedStandby;
         const othersToAdvance = updated.filter(
-          s => s.studioId === confirmedStandby!.studioId &&
-               s.date === confirmedStandby!.date &&
-               s.startTime === confirmedStandby!.startTime &&
-               s.status === 'waiting' &&
-               s.queuePosition > confirmedStandby!.queuePosition
+          s => s.studioId === cs.studioId &&
+               s.date === cs.date &&
+               s.startTime === cs.startTime &&
+               (s.status === 'waiting' || s.status === 'notified') &&
+               s.queuePosition > cs.queuePosition
         );
 
         if (othersToAdvance.length > 0) {
@@ -191,6 +199,23 @@ export const useStandbyStore = create<StandbyState>((set, get) => ({
     });
 
     console.log('[StandbyStore] 候补确认成功:', standbyId);
+
+    if (confirmedStandby) {
+      const cs: StandbyRecord = confirmedStandby;
+      get().addSlotFlowEvent({
+        studioId: cs.studioId,
+        studioName: cs.studioName,
+        date: cs.date,
+        startTime: cs.startTime,
+        endTime: cs.endTime,
+        eventType: 'confirmed',
+        userId: cs.userId,
+        userName: cs.userName,
+        queuePosition: cs.queuePosition,
+        description: `${cs.userName} 确认补位`
+      });
+    }
+
     return true;
   },
 
@@ -203,27 +228,35 @@ export const useStandbyStore = create<StandbyState>((set, get) => ({
     await new Promise(resolve => setTimeout(resolve, 200));
 
     let cancelledStandby: StandbyRecord | null = null;
+    let originalStatus: string | null = null;
 
     set(state => {
-      const updated = state.standbyRecords.map(s => {
+      const original = state.standbyRecords.find(s => s.id === standbyId);
+      if (original) {
+        originalStatus = original.status;
+      }
+
+      const updated: StandbyRecord[] = state.standbyRecords.map(s => {
         if (s.id === standbyId) {
-          cancelledStandby = {
+          const cancelled: StandbyRecord = {
             ...s,
             status: 'cancelled',
             cancelledAt: new Date().toISOString()
           };
-          return cancelledStandby;
+          cancelledStandby = cancelled;
+          return cancelled;
         }
         return s;
       });
 
-      if (cancelledStandby && (cancelledStandby.status === 'waiting' || cancelledStandby.status === 'notified')) {
-        const cancelledPos = cancelledStandby.queuePosition;
+      if (cancelledStandby && (originalStatus === 'waiting' || originalStatus === 'notified')) {
+        const cl = cancelledStandby;
+        const cancelledPos = cl.queuePosition;
         const sameQueue = updated.filter(
-          s => s.studioId === cancelledStandby!.studioId &&
-               s.date === cancelledStandby!.date &&
-               s.startTime === cancelledStandby!.startTime &&
-               s.status === 'waiting' &&
+          s => s.studioId === cl.studioId &&
+               s.date === cl.date &&
+               s.startTime === cl.startTime &&
+               (s.status === 'waiting' || s.status === 'notified') &&
                s.queuePosition > cancelledPos
         );
 
@@ -243,6 +276,23 @@ export const useStandbyStore = create<StandbyState>((set, get) => ({
     });
 
     console.log('[StandbyStore] 候补取消成功:', standbyId);
+
+    if (cancelledStandby && originalStatus) {
+      const cl: StandbyRecord = cancelledStandby;
+      get().addSlotFlowEvent({
+        studioId: cl.studioId,
+        studioName: cl.studioName,
+        date: cl.date,
+        startTime: cl.startTime,
+        endTime: cl.endTime,
+        eventType: 'abandoned',
+        userId: cl.userId,
+        userName: cl.userName,
+        queuePosition: cl.queuePosition,
+        description: `${cl.userName} 放弃候补`
+      });
+    }
+
     return true;
   },
 
@@ -267,7 +317,7 @@ export const useStandbyStore = create<StandbyState>((set, get) => ({
         const expiredPos = expiredRecord.queuePosition;
 
         const advanced = updated.map(s => {
-          if (s.status === 'waiting' &&
+          if ((s.status === 'waiting' || s.status === 'notified') &&
               s.studioId === expiredRecord.studioId &&
               s.date === expiredRecord.date &&
               s.startTime === expiredRecord.startTime &&
@@ -284,6 +334,21 @@ export const useStandbyStore = create<StandbyState>((set, get) => ({
 
     if (expired) {
       console.log('[StandbyStore] 候补已过期:', standbyId);
+      const expiredRecord = get().standbyRecords.find(s => s.id === standbyId);
+      if (expiredRecord) {
+        get().addSlotFlowEvent({
+          studioId: expiredRecord.studioId,
+          studioName: expiredRecord.studioName,
+          date: expiredRecord.date,
+          startTime: expiredRecord.startTime,
+          endTime: expiredRecord.endTime,
+          eventType: 'expired',
+          userId: expiredRecord.userId,
+          userName: expiredRecord.userName,
+          queuePosition: expiredRecord.queuePosition,
+          description: `${expiredRecord.userName} 通知超时，自动释放空位`
+        });
+      }
     }
     return expired;
   },
@@ -336,6 +401,20 @@ export const useStandbyStore = create<StandbyState>((set, get) => ({
     }));
 
     console.log('[StandbyStore] 已通知候补用户:', nextStandby.userName, '位置:', nextStandby.queuePosition);
+
+    get().addSlotFlowEvent({
+      studioId: nextStandby.studioId,
+      studioName: nextStandby.studioName,
+      date: nextStandby.date,
+      startTime: nextStandby.startTime,
+      endTime: nextStandby.endTime,
+      eventType: 'notified',
+      userId: nextStandby.userId,
+      userName: nextStandby.userName,
+      queuePosition: nextStandby.queuePosition,
+      description: `空位通知 ${nextStandby.userName}（排位第${nextStandby.queuePosition}）`
+    });
+
     return nextStandby;
   },
 
@@ -413,5 +492,52 @@ export const useStandbyStore = create<StandbyState>((set, get) => ({
     }
 
     return expired;
+  },
+
+  addSlotFlowEvent: (event: Omit<SlotFlowEvent, 'id' | 'createdAt'>) => {
+    const newEvent: SlotFlowEvent = {
+      ...event,
+      id: `sfe-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      createdAt: new Date().toISOString()
+    };
+
+    set(state => ({
+      slotFlowEvents: [newEvent, ...state.slotFlowEvents]
+    }));
+
+    console.log('[StandbyStore] 空位流转事件:', event.eventType, event.description);
+  },
+
+  getSlotFlowEvents: (studioId: string, date: string, startTime: string): SlotFlowEvent[] => {
+    return get().slotFlowEvents.filter(
+      e => e.studioId === studioId && e.date === date && e.startTime === startTime
+    ).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  },
+
+  getAllSlotFlowEvents: (): SlotFlowEvent[] => {
+    return get().slotFlowEvents.sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  },
+
+  getSlotCurrentHolder: (studioId: string, date: string, startTime: string): { userId: string; userName: string; status: string } | null => {
+    const { standbyRecords } = get();
+    const notified = standbyRecords.find(
+      s => s.studioId === studioId && s.date === date &&
+           s.startTime === startTime && s.status === 'notified'
+    );
+    if (notified) {
+      return { userId: notified.userId, userName: notified.userName, status: 'notified' };
+    }
+
+    const firstWaiting = standbyRecords
+      .filter(s => s.studioId === studioId && s.date === date &&
+                   s.startTime === startTime && s.status === 'waiting')
+      .sort((a, b) => a.queuePosition - b.queuePosition)[0];
+    if (firstWaiting) {
+      return { userId: firstWaiting.userId, userName: firstWaiting.userName, status: 'waiting' };
+    }
+
+    return null;
   }
 }));

@@ -132,3 +132,39 @@ export interface SettlementFilter {
   startDate: string;
   endDate: string;
 }
+
+export interface SettlementSheet {
+  id: string;
+  photographerId: string;
+  photographerName: string;
+  startDate: string;
+  endDate: string;
+  platformReceivable: number;
+  photographerReceivable: number;
+  diffAdjustment: number;
+  adjustedAmount: number;
+  pendingDiscrepancyCount: number;
+  status: 'draft' | 'pending_payment' | 'paid' | 'cancelled';
+  createdBy: string;
+  createdAt: string;
+  confirmedAt?: string;
+  paidAt?: string;
+  cancelledAt?: string;
+  remark?: string;
+}
+
+export type SettlementSheetStatus = SettlementSheet['status'];
+
+export const SETTLEMENT_SHEET_STATUS_TEXT: Record<SettlementSheetStatus, string> = {
+  draft: '草稿',
+  pending_payment: '待打款',
+  paid: '已打款',
+  cancelled: '已取消'
+};
+
+export const SETTLEMENT_SHEET_STATUS_COLOR: Record<SettlementSheetStatus, string> = {
+  draft: '#D97706',
+  pending_payment: '#2563EB',
+  paid: '#059669',
+  cancelled: '#94A3B8'
+};

@@ -8,6 +8,7 @@ import { useStandbyStore } from '@/store/useStandbyStore';
 import { useStudioStore } from '@/store/useStudioStore';
 import StandbyQueue from '@/components/StandbyQueue';
 import { formatDate, formatDateTime } from '@/utils/date';
+import { SlotFlowEvent, SLOT_FLOW_EVENT_TEXT, SLOT_FLOW_EVENT_COLOR, SLOT_FLOW_EVENT_ICON } from '@/types/standby';
 
 const calculateDuration = (startTime: string, endTime: string): number => {
   const [startH, startM] = startTime.split(':').map(Number);
@@ -28,7 +29,8 @@ const StandbyPage: React.FC = () => {
     markAllNotificationsRead,
     initStandby,
     checkAndExpireNotifications,
-    getUserQueuePositions
+    getUserQueuePositions,
+    getAllSlotFlowEvents
   } = useStandbyStore();
   const { studios, fetchStudios, initStudios } = useStudioStore();
 
@@ -39,6 +41,7 @@ const StandbyPage: React.FC = () => {
   const queueRecords = standbyRecords.filter(s => s.status === 'waiting' || s.status === 'notified');
   const notifiedRecord = myRecords.find(s => s.status === 'notified');
   const unreadCount = getUnreadCount();
+  const slotFlowEvents = getAllSlotFlowEvents();
 
   useEffect(() => {
     initData();
@@ -299,6 +302,43 @@ const StandbyPage: React.FC = () => {
               onConfirm={handleConfirm}
               onCancel={handleCancel}
             />
+
+            <View className={styles.sectionTitle}>
+              <Text>空位流转记录</Text>
+            </View>
+
+            {slotFlowEvents.length === 0 ? (
+              <View className={styles.slotFlowEmpty}>
+                <Text className={styles.slotFlowEmptyText}>暂无空位流转记录</Text>
+                <Text className={styles.slotFlowEmptySubtext}>预约超时释放或候补操作后将自动记录</Text>
+              </View>
+            ) : (
+              <View className={styles.slotFlowCard}>
+                {slotFlowEvents.slice(0, 20).map((event: SlotFlowEvent) => {
+                  return (
+                    <View key={event.id} className={styles.slotFlowItem}>
+                      <View className={styles.slotFlowDotLine}>
+                        <View className={styles.slotFlowDot} style={{ backgroundColor: SLOT_FLOW_EVENT_COLOR[event.eventType] }} />
+                      </View>
+                      <View className={styles.slotFlowContent}>
+                        <View className={styles.slotFlowHeader}>
+                          <Text className={styles.slotFlowIcon}>{SLOT_FLOW_EVENT_ICON[event.eventType]}</Text>
+                          <Text className={styles.slotFlowType} style={{ color: SLOT_FLOW_EVENT_COLOR[event.eventType] }}>
+                            {SLOT_FLOW_EVENT_TEXT[event.eventType]}
+                          </Text>
+                          <Text className={styles.slotFlowStudio}>{event.studioName}</Text>
+                        </View>
+                        <Text className={styles.slotFlowDesc}>{event.description}</Text>
+                        <View className={styles.slotFlowMeta}>
+                          <Text className={styles.slotFlowTime}>{event.date} {event.startTime}-{event.endTime}</Text>
+                          <Text className={styles.slotFlowCreatedAt}>{formatDateTime(event.createdAt)}</Text>
+                        </View>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
 
             <View className={styles.sectionTitle}>
               <Text>通知消息</Text>

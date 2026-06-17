@@ -17,13 +17,16 @@ const FlowDetailPage: React.FC = () => {
   const { platformFlows, photographerFlows, fetchFlows, loading } = useReconcileStore();
   const [flow, setFlow] = useState<FlowRecord | null>(null);
   const [orderNo, setOrderNo] = useState<string>('');
+  const [source, setSource] = useState<string>('');
 
   useEffect(() => {
     const params = Taro.getCurrentInstance().router?.params;
     const orderNoParam = params?.orderNo as string;
+    const sourceParam = params?.source as string;
     if (orderNoParam) {
       setOrderNo(orderNoParam);
-      loadFlowData(orderNoParam);
+      setSource(sourceParam || '');
+      loadFlowData(orderNoParam, sourceParam);
     } else {
       Taro.showToast({ title: '参数错误', icon: 'error' });
     }
@@ -31,26 +34,37 @@ const FlowDetailPage: React.FC = () => {
 
   useDidShow(() => {
     if (orderNo && !flow) {
-      loadFlowData(orderNo);
+      loadFlowData(orderNo, source);
     }
   });
 
   usePullDownRefresh(async () => {
     if (orderNo) {
-      await loadFlowData(orderNo);
+      await loadFlowData(orderNo, source);
     }
     Taro.stopPullDownRefresh();
   });
 
-  const loadFlowData = async (orderNoParam: string) => {
-    console.log('[FlowDetailPage] 加载流水详情:', orderNoParam);
+  const loadFlowData = async (orderNoParam: string, sourceParam?: string) => {
+    console.log('[FlowDetailPage] 加载流水详情:', orderNoParam, '来源:', sourceParam);
 
     if (platformFlows.length === 0 || photographerFlows.length === 0) {
       await fetchFlows();
     }
 
-    const allFlows = [...platformFlows, ...photographerFlows];
-    const foundFlow = allFlows.find(f => f.orderNo === orderNoParam);
+    const currentPlatformFlows = useReconcileStore.getState().platformFlows;
+    const currentPhotographerFlows = useReconcileStore.getState().photographerFlows;
+
+    let foundFlow: FlowRecord | null = null;
+
+    if (sourceParam === 'platform') {
+      foundFlow = currentPlatformFlows.find(f => f.orderNo === orderNoParam) || null;
+    } else if (sourceParam === 'photographer') {
+      foundFlow = currentPhotographerFlows.find(f => f.orderNo === orderNoParam) || null;
+    } else {
+      const allFlows = [...currentPlatformFlows, ...currentPhotographerFlows];
+      foundFlow = allFlows.find(f => f.orderNo === orderNoParam) || null;
+    }
 
     if (foundFlow) {
       setFlow(foundFlow);

@@ -369,3 +369,207 @@
   margin-bottom: $spacing-sm;
   font-weight: $font-weight-medium;
 }
+
+.emptySubtext {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  text-align: center;
+}
+
+.createSheetCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  box-shadow: $shadow-card;
+  border: 2rpx dashed $color-primary;
+  border-color: rgba(37, 99, 235, 0.3);
+
+  &:active {
+    opacity: 0.9;
+    background: $color-bg-hover;
+  }
+}
+
+.createSheetIcon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: $radius-md;
+  background: rgba(37, 99, 235, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.createSheetIconText {
+  font-size: $font-size-xxl;
+  color: $color-primary;
+  font-weight: $font-weight-bold;
+}
+
+.createSheetContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.createSheetTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+}
+
+.createSheetDesc {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.sheetCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.sheetHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: $spacing-md;
+}
+
+.sheetInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.sheetId {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.sheetPeriod {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.sheetStatus {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  padding: 4rpx 16rpx;
+  border-radius: $radius-round;
+}
+
+.sheetBody {
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-md;
+}
+
+.sheetAmountRow {
+  display: flex;
+  gap: $spacing-md;
+  margin-bottom: $spacing-sm;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.sheetAmountItem {
+  flex: 1;
+  text-align: center;
+}
+
+.sheetAmountLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: 4rpx;
+  display: block;
+}
+
+.sheetAmountValue {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+
+  &.hasDiff {
+    color: $color-error;
+  }
+
+  &.bold {
+    font-weight: $font-weight-bold;
+    font-size: $font-size-lg;
+  }
+}
+
+.sheetWarning {
+  background: rgba(220, 38, 38, 0.08);
+  border-radius: $radius-sm;
+  padding: $spacing-sm $spacing-md;
+  margin-top: $spacing-sm;
+}
+
+.sheetWarningText {
+  font-size: $font-size-xs;
+  color: $color-error;
+}
+
+.sheetFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: $spacing-sm;
+  border-top: 1rpx solid $color-divider;
+}
+
+.sheetDate {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.sheetActions {
+  display: flex;
+  gap: $spacing-sm;
+  align-items: center;
+}
+
+.sheetActionBtn {
+  font-size: $font-size-xs !important;
+  padding: 4rpx 20rpx !important;
+  border-radius: $radius-round !important;
+  line-height: 1.5 !important;
+
+  &::after {
+    border: none;
+  }
+}
+
+.cancelActionBtn {
+  background: $color-bg-hover !important;
+  color: $color-text-secondary !important;
+}
+
+.confirmActionBtn {
+  background: $color-primary !important;
+  color: $color-text-white !important;
+}
+
+.paidActionBtn {
+  background: $color-success !important;
+  color: $color-text-white !important;
+}
+
+.sheetPaidLabel {
+  font-size: $font-size-xs;
+  color: $color-success;
+  font-weight: $font-weight-medium;
+}

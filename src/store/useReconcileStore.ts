@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { FlowRecord, ReconcileResult, DiscrepancyRecord, DiscrepancyLog, PhotographerSettlement } from '@/types/reconcile';
+import { FlowRecord, ReconcileResult, DiscrepancyRecord, DiscrepancyLog, PhotographerSettlement, SettlementSheet } from '@/types/reconcile';
 import {
   mockPlatformFlows,
   mockPhotographerFlows,
@@ -12,6 +12,7 @@ interface ReconcileState {
   photographerFlows: FlowRecord[];
   reconcileResults: ReconcileResult[];
   discrepancies: DiscrepancyRecord[];
+  settlementSheets: SettlementSheet[];
   currentReconcile: ReconcileResult | null;
   currentDiscrepancy: DiscrepancyRecord | null;
   loading: boolean;
@@ -35,6 +36,12 @@ interface ReconcileState {
     flows: FlowRecord[];
     discrepancies: DiscrepancyRecord[];
   } | null;
+  createSettlementSheet: (photographerId: string, photographerName: string, startDate: string, endDate: string, createdBy: string) => SettlementSheet;
+  confirmSettlementSheet: (sheetId: string) => boolean;
+  markSettlementPaid: (sheetId: string) => boolean;
+  cancelSettlementSheet: (sheetId: string) => boolean;
+  getSettlementSheets: (photographerId?: string) => SettlementSheet[];
+  getSettlementSheetById: (sheetId: string) => SettlementSheet | undefined;
   compareFlows: (platformFlows: FlowRecord[], photographerFlows: FlowRecord[]) => {
     matched: FlowRecord[];
     discrepancies: Omit<DiscrepancyRecord, 'id' | 'reconcileId' | 'createdAt'>[];
@@ -54,6 +61,7 @@ export const useReconcileStore = create<ReconcileState>((set, get) => ({
   photographerFlows: [],
   reconcileResults: [],
   discrepancies: [],
+  settlementSheets: [],
   currentReconcile: null,
   currentDiscrepancy: null,
   loading: false,
@@ -85,7 +93,7 @@ export const useReconcileStore = create<ReconcileState>((set, get) => ({
     console.log('[ReconcileStore] 流水数据加载完成');
   },
 
-  fetchFlowsBySource: async (source: 'platform' | 'photographer') => {
+  fetchFlowsBySource: async (_source: 'platform' | 'photographer') => {
     const { initialized, initReconcile } = get();
     if (!initialized) {
       initReconcile();
@@ -515,6 +523,102 @@ export const useReconcileStore = create<ReconcileState>((set, get) => ({
     ).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     return { settlement, flows, discrepancies: discList };
+  },
+
+  createSettlementSheet: (photographerId: string, photographerName: string, startDate: string, endDate: string, createdBy: string): SettlementSheet => {
+    const settlement = get().getPhotographerSettlements(startDate, endDate).find(s => s.photographerId === photographerId);
+
+    const platformReceivable = settlement?.platformNet || 0;
+    const photographerReceivable = settlement?.photographerNet || 0;
+    const diffAdjustment = settlement?.diffAmount || 0;
+    const pendingDiscrepancyCount = settlement?.pendingDiscrepancyCount || 0;
+    const adjustedAmount = photographerReceivable + diffAdjustment;
+
+    const sheet: SettlementSheet = {
+      id: `sheet-${Date.now()}`,
+      photographerId,
+      photographerName,
+      startDate,
+      endDate,
+      platformReceivable,
+      photographerReceivable,
+      diffAdjustment,
+      adjustedAmount,
+      pendingDiscrepancyCount,
+      status: 'draft',
+      createdBy,
+      createdAt: new Date().toISOString()
+    };
+
+    set(state => ({
+      settlementSheets: [sheet, ...state.settlementSheets]
+    }));
+
+    console.log('[ReconcileStore] 创建结算单:', sheet.id, '摄影师:', photographerName);
+    return sheet;
+  },
+
+  confirmSettlementSheet: (sheetId: string): boolean => {
+    let success = false;
+    set(state => ({
+      settlementSheets: state.settlementSheets.map(s => {
+        if (s.id === sheetId && s.status === 'draft') {
+          success = true;
+          return { ...s, status: 'pending_payment' as const, confirmedAt: new Date().toISOString() };
+        }
+        return s;
+      })
+    }));
+    if (success) {
+      console.log('[ReconcileStore] 结算单已确认，待打款:', sheetId);
+    }
+    return success;
+  },
+
+  markSettlementPaid: (sheetId: string): boolean => {
+    let success = false;
+    set(state => ({
+      settlementSheets: state.settlementSheets.map(s => {
+        if (s.id === sheetId && s.status === 'pending_payment') {
+          success = true;
+          return { ...s, status: 'paid' as const, paidAt: new Date().toISOString() };
+        }
+        return s;
+      })
+    }));
+    if (success) {
+      console.log('[ReconcileStore] 结算单已打款:', sheetId);
+    }
+    return success;
+  },
+
+  cancelSettlementSheet: (sheetId: string): boolean => {
+    let success = false;
+    set(state => ({
+      settlementSheets: state.settlementSheets.map(s => {
+        if (s.id === sheetId && (s.status === 'draft' || s.status === 'pending_payment')) {
+          success = true;
+          return { ...s, status: 'cancelled' as const, cancelledAt: new Date().toISOString() };
+        }
+        return s;
+      })
+    }));
+    if (success) {
+      console.log('[ReconcileStore] 结算单已取消:', sheetId);
+    }
+    return success;
+  },
+
+  getSettlementSheets: (photographerId?: string): SettlementSheet[] => {
+    const { settlementSheets } = get();
+    const filtered = photographerId
+      ? settlementSheets.filter(s => s.photographerId === photographerId)
+      : settlementSheets;
+    return filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  },
+
+  getSettlementSheetById: (sheetId: string): SettlementSheet | undefined => {
+    return get().settlementSheets.find(s => s.id === sheetId);
   },
 
   getSummary: () => {
