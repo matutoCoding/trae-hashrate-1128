@@ -11,44 +11,41 @@ import { formatCurrency } from '@/utils/amount';
 import { STUDIO_STATUS_TEXT, STUDIO_STATUS_COLOR, Studio } from '@/types/studio';
 
 const StudioDetailPage: React.FC = () => {
-  const { currentStudio, loading, fetchStudioById } = useStudioStore();
-  const [studio, setStudio] = useState<Studio | null>(null);
+  const { studios, currentStudio, loading, fetchStudioById, fetchStudios } = useStudioStore();
+  const [studioId, setStudioId] = useState<string>('');
 
   useEffect(() => {
     const id = Taro.getCurrentInstance().router?.params?.id as string;
     if (id) {
-      loadStudioData(id);
+      setStudioId(id);
+      initData(id);
     } else {
       Taro.showToast({ title: '参数错误', icon: 'error' });
     }
   }, []);
 
   useDidShow(() => {
-    const id = Taro.getCurrentInstance().router?.params?.id as string;
-    if (id && !studio) {
-      loadStudioData(id);
+    if (studioId && studios.length === 0) {
+      fetchStudios();
     }
   });
 
   usePullDownRefresh(async () => {
-    const id = Taro.getCurrentInstance().router?.params?.id as string;
-    if (id) {
-      await loadStudioData(id);
+    if (studioId) {
+      await fetchStudioById(studioId);
     }
     Taro.stopPullDownRefresh();
   });
 
-  const loadStudioData = async (id: string) => {
-    console.log('[StudioDetailPage] 加载影棚详情:', id);
-    const data = await fetchStudioById(id);
-    if (data) {
-      setStudio(data);
-    } else {
-      Taro.showToast({ title: '影棚不存在', icon: 'error' });
+  const initData = async (id: string) => {
+    console.log('[StudioDetailPage] 初始化数据:', id);
+    if (studios.length === 0) {
+      await fetchStudios();
     }
+    await fetchStudioById(id);
   };
 
-  const displayStudio = studio || currentStudio;
+  const displayStudio = currentStudio || studios.find(s => s.id === studioId) || null;
 
   const handleBook = () => {
     if (!displayStudio) return;

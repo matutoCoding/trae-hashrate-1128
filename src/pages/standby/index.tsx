@@ -7,57 +7,78 @@ import classnames from 'classnames';
 import { useStandbyStore } from '@/store/useStandbyStore';
 import { useStudioStore } from '@/store/useStudioStore';
 import StandbyQueue from '@/components/StandbyQueue';
-import StatusBadge from '@/components/StatusBadge';
-import { STANDBY_STATUS_TEXT, STANDBY_STATUS_COLOR } from '@/types/standby';
-import { formatDateTime, formatDate } from '@/utils/date';
+import { formatDate, formatDateTime } from '@/utils/date';
+
+const calculateDuration = (startTime: string, endTime: string): number => {
+  const [startH, startM] = startTime.split(':').map(Number);
+  const [endH, endM] = endTime.split(':').map(Number);
+  return (endH * 60 + endM - startH * 60 - startM) / 60;
+};
 
 const StandbyPage: React.FC = () => {
   const {
     standbyRecords,
     notifications,
     loading,
-    fetchStandbyRecords,
     fetchNotifications,
     confirmStandby,
     cancelStandby,
     createStandby,
     getUnreadCount,
-    markAllNotificationsRead
+    markAllNotificationsRead,
+    initStandby,
+    checkAndExpireNotifications
   } = useStandbyStore();
-  const { studios, fetchStudios } = useStudioStore();
+  const { studios, fetchStudios, initStudios } = useStudioStore();
 
   const [activeTab, setActiveTab] = useState<'queue' | 'my'>('queue');
   const [countdown, setCountdown] = useState<number>(0);
+
+  const myRecords = standbyRecords.filter(s => s.userId === 'user-current');
+  const queueRecords = standbyRecords.filter(s => s.status === 'waiting' || s.status === 'notified');
+  const notifiedRecord = myRecords.find(s => s.status === 'notified');
+  const unreadCount = getUnreadCount();
 
   useEffect(() => {
     initData();
   }, []);
 
   useDidShow(() => {
-    initData();
+    console.log('[StandbyPage] useDidShow');
+    initStudios();
+    initStandby();
+    checkAndExpireNotifications();
+    if (studios.length === 0) {
+      fetchStudios();
+    }
+    fetchNotifications();
   });
 
   usePullDownRefresh(async () => {
-    await initData();
+    checkAndExpireNotifications();
+    await fetchNotifications();
     Taro.stopPullDownRefresh();
   });
 
   const initData = async () => {
     console.log('[StandbyPage] 初始化数据');
     await fetchStudios();
-    await fetchStandbyRecords();
+    initStandby();
+    checkAndExpireNotifications();
     await fetchNotifications();
   };
 
   useEffect(() => {
-    const notified = standbyRecords.find(s => s.status === 'notified');
-    if (notified && notified.notifiedAt) {
-      const notifiedTime = new Date(notified.notifiedAt).getTime();
-      const expireTime = notifiedTime + notified.validDuration * 60 * 1000;
+    if (notifiedRecord && notifiedRecord.notifiedAt) {
+      const notifiedTime = new Date(notifiedRecord.notifiedAt).getTime();
+      const expireTime = notifiedTime + notifiedRecord.validDuration * 60 * 1000;
       const updateCountdown = () => {
         const now = Date.now();
         const remaining = Math.max(0, Math.floor((expireTime - now) / 1000));
         setCountdown(remaining);
+        if (remaining === 0) {
+          checkAndExpireNotifications();
+        }
       };
       updateCountdown();
       const timer = setInterval(updateCountdown, 1000);
@@ -65,10 +86,7 @@ const StandbyPage: React.FC = () => {
     } else {
       setCountdown(0);
     }
-  }, [standbyRecords]);
-
-  const notifiedRecord = standbyRecords.find(s => s.status === 'notified');
-  const unreadCount = getUnreadCount();
+  }, [notifiedRecord?.id, notifiedRecord?.notifiedAt]);
 
   const formatCountdown = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -89,9 +107,10 @@ const StandbyPage: React.FC = () => {
             const record = standbyRecords.find(s => s.id === id);
             if (record) {
               const studio = studios.find(s => s.id === record.studioId);
-              const amount = (studio?.pricePerHour || 0) * record.duration;
+              const duration = calculateDuration(record.startTime, record.endTime);
+              const amount = (studio?.pricePerHour || 0) * duration;
               Taro.navigateTo({
-                url: `/pages/booking-confirm/index?studioId=${record.studioId}&date=${record.date}&startTime=${record.startTime}&endTime=${record.endTime}&duration=${record.duration}&amount=${amount}&standbyId=${id}`
+                url: `/pages/booking-confirm/index?studioId=${record.studioId}&date=${record.date}&startTime=${record.startTime}&endTime=${record.endTime}&duration=${duration}&amount=${amount}&standbyId=${id}`
               });
             }
             Taro.showToast({ title: '已确认', icon: 'success' });
@@ -165,15 +184,6 @@ const StandbyPage: React.FC = () => {
     markAllNotificationsRead();
     Taro.showToast({ title: '已全部标为已读', icon: 'success' });
   };
-
-  const handleViewDetail = (id: string) => {
-    Taro.navigateTo({
-      url: `/pages/studio-detail/index?id=${id}`
-    });
-  };
-
-  const queueRecords = standbyRecords.filter(s => s.status === 'waiting' || s.status === 'notified');
-  const myRecords = standbyRecords;
 
   if (loading && standbyRecords.length === 0) {
     return (

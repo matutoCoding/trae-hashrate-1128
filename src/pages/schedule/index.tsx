@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, ScrollView, Button, Swiper, SwiperItem, Image } from '@tarojs/components';
+import { View, Text, ScrollView, Button } from '@tarojs/components';
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro';
 import styles from './index.module.scss';
 import classnames from 'classnames';
@@ -7,12 +7,10 @@ import classnames from 'classnames';
 import { useStudioStore } from '@/store/useStudioStore';
 import { useBookingStore } from '@/store/useBookingStore';
 import { useStandbyStore } from '@/store/useStandbyStore';
-import StudioCard from '@/components/StudioCard';
 import TimeSlotPicker from '@/components/TimeSlotPicker';
-import StatusBadge from '@/components/StatusBadge';
 import { formatDate, generateDateRange, getWeekDay, isToday } from '@/utils/date';
 import { formatCurrency } from '@/utils/amount';
-import { Studio } from '@/types/studio';
+import { Booking } from '@/types/booking';
 
 const SchedulePage: React.FC = () => {
   const { studios, loading, fetchStudios, currentStudio, setCurrentStudio } = useStudioStore();
@@ -24,40 +22,99 @@ const SchedulePage: React.FC = () => {
     fetchTimeSlots,
     toggleSlotSelection,
     clearSlotSelection,
-    getSelectedSlotsInfo
+    getSelectedSlotsInfo,
+    startAutoReleaseTimer,
+    stopAutoReleaseTimer,
+    setOnBookingReleased,
+    checkAndReleaseTimeouts,
+    initBookings
   } = useBookingStore();
-  const { notifyNextStandby, fetchStandbyRecords } = useStandbyStore();
+  const { notifyNextStandby, initStandby } = useStandbyStore();
 
   const dates = useMemo(() => generateDateRange(formatDate(new Date()), 14), []);
   const [activeDateIndex, setActiveDateIndex] = useState(0);
+  const [releaseNotice, setReleaseNotice] = useState<Booking | null>(null);
 
   useEffect(() => {
     initData();
+    setupAutoRelease();
+    return () => {
+      stopAutoReleaseTimer();
+    };
   }, []);
 
   useDidShow(() => {
+    console.log('[SchedulePage] useDidShow');
     if (studios.length === 0) {
-      initData();
+      fetchStudios();
+    }
+    initBookings();
+    initStandby();
+
+    const released = checkAndReleaseTimeouts();
+    if (released.length > 0) {
+      released.forEach(booking => handleBookingReleased(booking));
+    }
+
+    if (selectedStudioId && selectedDate) {
+      fetchTimeSlots(selectedDate, selectedStudioId);
     }
   });
 
   usePullDownRefresh(async () => {
-    await initData();
+    const released = checkAndReleaseTimeouts();
+    if (released.length > 0) {
+      released.forEach(booking => handleBookingReleased(booking));
+    }
+    if (selectedStudioId && selectedDate) {
+      await fetchTimeSlots(selectedDate, selectedStudioId);
+    }
     Taro.stopPullDownRefresh();
   });
+
+  const setupAutoRelease = () => {
+    setOnBookingReleased((booking) => {
+      handleBookingReleased(booking);
+    });
+    startAutoReleaseTimer();
+  };
+
+  const handleBookingReleased = async (booking: Booking) => {
+    console.log('[SchedulePage] 预约已释放，通知候补:', booking.id, booking.studioId, booking.startTime);
+    setReleaseNotice(booking);
+    try {
+      const nextStandby = await notifyNextStandby(booking.studioId, booking.date, booking.startTime);
+      if (nextStandby) {
+        console.log('[SchedulePage] 已通知候补用户:', nextStandby.userName);
+      }
+    } catch (e) {
+      console.error('[SchedulePage] 通知候补失败:', e);
+    }
+    setTimeout(() => setReleaseNotice(null), 3000);
+  };
 
   const initData = async () => {
     console.log('[SchedulePage] 初始化数据');
     await fetchStudios();
-    await fetchStandbyRecords();
+    initBookings();
+    initStandby();
 
-    if (studios.length > 0 && !selectedStudioId) {
-      const firstAvailable = studios.find(s => s.status === 'available');
+    const released = checkAndReleaseTimeouts();
+    if (released.length > 0) {
+      released.forEach(booking => handleBookingReleased(booking));
+    }
+
+    const studioList = useStudioStore.getState().studios;
+    const currentStudioId = useBookingStore.getState().selectedStudioId;
+    const currentDate = useBookingStore.getState().selectedDate;
+
+    if (studioList.length > 0 && !currentStudioId) {
+      const firstAvailable = studioList.find(s => s.status === 'available');
       if (firstAvailable) {
         selectStudio(firstAvailable);
       }
-    } else if (selectedStudioId && selectedDate) {
-      await fetchTimeSlots(selectedDate, selectedStudioId);
+    } else if (currentStudioId && currentDate) {
+      await fetchTimeSlots(currentDate, currentStudioId);
     }
   };
 

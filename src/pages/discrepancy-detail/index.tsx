@@ -15,7 +15,15 @@ import {
 } from '@/types/reconcile';
 
 const DiscrepancyDetailPage: React.FC = () => {
-  const { discrepancies, fetchDiscrepancies, resolveDiscrepancy, ignoreDiscrepancy, loading } = useReconcileStore();
+  const {
+    discrepancies,
+    fetchDiscrepancies,
+    resolveDiscrepancy,
+    ignoreDiscrepancy,
+    loading,
+    initReconcile,
+    getDiscrepancyById
+  } = useReconcileStore();
   const [discrepancy, setDiscrepancy] = useState<DiscrepancyRecord | null>(null);
   const [id, setId] = useState<string>('');
 
@@ -31,26 +39,36 @@ const DiscrepancyDetailPage: React.FC = () => {
   }, []);
 
   useDidShow(() => {
-    if (id && !discrepancy) {
-      loadDiscrepancyData(id);
+    console.log('[DiscrepancyDetailPage] useDidShow');
+    initReconcile();
+    if (id) {
+      const found = getDiscrepancyById(id);
+      if (found) {
+        setDiscrepancy(found);
+      }
     }
   });
 
   usePullDownRefresh(async () => {
     if (id) {
-      await loadDiscrepancyData(id);
+      initReconcile();
+      const found = getDiscrepancyById(id);
+      if (found) {
+        setDiscrepancy(found);
+      }
     }
     Taro.stopPullDownRefresh();
   });
 
   const loadDiscrepancyData = async (idParam: string) => {
     console.log('[DiscrepancyDetailPage] 加载差异详情:', idParam);
+    initReconcile();
 
     if (discrepancies.length === 0) {
       await fetchDiscrepancies();
     }
 
-    const found = discrepancies.find(d => d.id === idParam);
+    const found = getDiscrepancyById(idParam);
     if (found) {
       setDiscrepancy(found);
     } else {
@@ -68,8 +86,11 @@ const DiscrepancyDetailPage: React.FC = () => {
         if (res.confirm) {
           try {
             await resolveDiscrepancy(id, '人工核对后确认无误', '当前用户');
+            const updated = getDiscrepancyById(id);
+            if (updated) {
+              setDiscrepancy(updated);
+            }
             Taro.showToast({ title: '已标记为解决', icon: 'success' });
-            loadDiscrepancyData(id);
           } catch (e) {
             console.error('[DiscrepancyDetailPage] 解决失败:', e);
             Taro.showToast({ title: '操作失败', icon: 'error' });
@@ -89,8 +110,11 @@ const DiscrepancyDetailPage: React.FC = () => {
         if (res.confirm) {
           try {
             await ignoreDiscrepancy(id, '金额较小，忽略不计', '当前用户');
+            const updated = getDiscrepancyById(id);
+            if (updated) {
+              setDiscrepancy(updated);
+            }
             Taro.showToast({ title: '已忽略', icon: 'success' });
-            loadDiscrepancyData(id);
           } catch (e) {
             console.error('[DiscrepancyDetailPage] 忽略失败:', e);
             Taro.showToast({ title: '操作失败', icon: 'error' });

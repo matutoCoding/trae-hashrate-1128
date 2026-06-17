@@ -3,11 +3,9 @@ import { FlowRecord, ReconcileResult, DiscrepancyRecord } from '@/types/reconcil
 import {
   mockPlatformFlows,
   mockPhotographerFlows,
-  mockReconcileResults,
-  getAllFlows,
-  getFlowsBySource
+  mockReconcileResults
 } from '@/data/flows';
-import { mockDiscrepancies, getDiscrepancies, getDiscrepancyById } from '@/data/discrepancies';
+import { mockDiscrepancies } from '@/data/discrepancies';
 
 interface ReconcileState {
   platformFlows: FlowRecord[];
@@ -18,7 +16,9 @@ interface ReconcileState {
   currentDiscrepancy: DiscrepancyRecord | null;
   loading: boolean;
   selectedPeriod: string;
+  initialized: boolean;
 
+  initReconcile: () => void;
   fetchFlows: () => Promise<void>;
   fetchFlowsBySource: (source: 'platform' | 'photographer') => Promise<void>;
   fetchReconcileResults: () => Promise<void>;
@@ -26,6 +26,7 @@ interface ReconcileState {
   runReconciliation: (startDate: string, endDate: string) => Promise<ReconcileResult>;
   resolveDiscrepancy: (discrepancyId: string, resolution: string, resolvedBy: string) => Promise<boolean>;
   ignoreDiscrepancy: (discrepancyId: string, remark: string, resolvedBy: string) => Promise<boolean>;
+  getDiscrepancyById: (id: string) => DiscrepancyRecord | undefined;
   compareFlows: (platformFlows: FlowRecord[], photographerFlows: FlowRecord[]) => {
     matched: FlowRecord[];
     discrepancies: Omit<DiscrepancyRecord, 'id' | 'reconcileId' | 'createdAt'>[];
@@ -49,52 +50,77 @@ export const useReconcileStore = create<ReconcileState>((set, get) => ({
   currentDiscrepancy: null,
   loading: false,
   selectedPeriod: 'today',
+  initialized: false,
+
+  initReconcile: () => {
+    if (get().initialized) return;
+    set({
+      platformFlows: [...mockPlatformFlows],
+      photographerFlows: [...mockPhotographerFlows],
+      reconcileResults: [...mockReconcileResults],
+      discrepancies: [...mockDiscrepancies],
+      initialized: true
+    });
+    console.log('[ReconcileStore] 初始化对账数据，共', mockPlatformFlows.length, '条平台流水，',
+                mockPhotographerFlows.length, '条摄影师流水，',
+                mockDiscrepancies.length, '条差异记录');
+  },
 
   fetchFlows: async () => {
+    const { initialized, initReconcile } = get();
+    if (!initialized) {
+      initReconcile();
+    }
     set({ loading: true });
-    await new Promise(resolve => setTimeout(resolve, 300));
-    set({
-      platformFlows: getFlowsBySource('platform'),
-      photographerFlows: getFlowsBySource('photographer'),
-      loading: false
-    });
+    await new Promise(resolve => setTimeout(resolve, 200));
+    set({ loading: false });
     console.log('[ReconcileStore] 流水数据加载完成');
   },
 
   fetchFlowsBySource: async (source: 'platform' | 'photographer') => {
-    set({ loading: true });
-    await new Promise(resolve => setTimeout(resolve, 200));
-    const flows = getFlowsBySource(source);
-    if (source === 'platform') {
-      set({ platformFlows: flows });
-    } else {
-      set({ photographerFlows: flows });
+    const { initialized, initReconcile } = get();
+    if (!initialized) {
+      initReconcile();
     }
+    set({ loading: true });
+    await new Promise(resolve => setTimeout(resolve, 150));
     set({ loading: false });
   },
 
   fetchReconcileResults: async () => {
+    const { initialized, initReconcile } = get();
+    if (!initialized) {
+      initReconcile();
+    }
     set({ loading: true });
-    await new Promise(resolve => setTimeout(resolve, 300));
-    set({
-      reconcileResults: [...mockReconcileResults].sort(
+    await new Promise(resolve => setTimeout(resolve, 200));
+    set(state => ({
+      reconcileResults: [...state.reconcileResults].sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       ),
       loading: false
-    });
-    console.log('[ReconcileStore] 对账结果加载完成，共', mockReconcileResults.length, '条');
+    }));
+    console.log('[ReconcileStore] 对账结果加载完成，共', get().reconcileResults.length, '条');
   },
 
-  fetchDiscrepancies: async (status?: string) => {
+  fetchDiscrepancies: async (_status?: string) => {
+    const { initialized, initReconcile } = get();
+    if (!initialized) {
+      initReconcile();
+    }
     set({ loading: true });
-    await new Promise(resolve => setTimeout(resolve, 300));
-    set({
-      discrepancies: getDiscrepancies(status).sort(
+    await new Promise(resolve => setTimeout(resolve, 200));
+    set(state => ({
+      discrepancies: [...state.discrepancies].sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       ),
       loading: false
-    });
-    console.log('[ReconcileStore] 差异记录加载完成，共', getDiscrepancies(status).length, '条');
+    }));
+    console.log('[ReconcileStore] 差异记录加载完成，共', get().discrepancies.length, '条');
+  },
+
+  getDiscrepancyById: (id: string): DiscrepancyRecord | undefined => {
+    return get().discrepancies.find(d => d.id === id);
   },
 
   compareFlows: (platformFlows: FlowRecord[], photographerFlows: FlowRecord[]) => {
@@ -171,6 +197,11 @@ export const useReconcileStore = create<ReconcileState>((set, get) => ({
   },
 
   runReconciliation: async (startDate: string, endDate: string) => {
+    const { initialized, initReconcile } = get();
+    if (!initialized) {
+      initReconcile();
+    }
+
     set({ loading: true });
     await new Promise(resolve => setTimeout(resolve, 1000));
 
@@ -200,17 +231,31 @@ export const useReconcileStore = create<ReconcileState>((set, get) => ({
       completedAt: new Date().toISOString()
     };
 
+    const newDiscrepancies = discrepancies.map((d, i) => ({
+      ...d,
+      id: `disc-${Date.now()}-${i}`,
+      reconcileId: newReconcile.id,
+      createdAt: new Date().toISOString()
+    }));
+
     set(state => ({
       reconcileResults: [newReconcile, ...state.reconcileResults],
+      discrepancies: [...newDiscrepancies, ...state.discrepancies],
       loading: false
     }));
 
-    console.log('[ReconcileStore] 对账任务完成:', newReconcile.id);
+    console.log('[ReconcileStore] 对账任务完成:', newReconcile.id, '新增差异:', newDiscrepancies.length, '条');
     return newReconcile;
   },
 
   resolveDiscrepancy: async (discrepancyId: string, resolution: string, resolvedBy: string) => {
-    await new Promise(resolve => setTimeout(resolve, 300));
+    const { initialized, initReconcile } = get();
+    if (!initialized) {
+      initReconcile();
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 250));
+
     set(state => ({
       discrepancies: state.discrepancies.map(d =>
         d.id === discrepancyId
@@ -218,12 +263,19 @@ export const useReconcileStore = create<ReconcileState>((set, get) => ({
           : d
       )
     }));
-    console.log('[ReconcileStore] 差异已解决:', discrepancyId);
+
+    console.log('[ReconcileStore] 差异已解决:', discrepancyId, '处理人:', resolvedBy);
     return true;
   },
 
   ignoreDiscrepancy: async (discrepancyId: string, remark: string, resolvedBy: string) => {
-    await new Promise(resolve => setTimeout(resolve, 300));
+    const { initialized, initReconcile } = get();
+    if (!initialized) {
+      initReconcile();
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 250));
+
     set(state => ({
       discrepancies: state.discrepancies.map(d =>
         d.id === discrepancyId
@@ -231,7 +283,8 @@ export const useReconcileStore = create<ReconcileState>((set, get) => ({
           : d
       )
     }));
-    console.log('[ReconcileStore] 差异已忽略:', discrepancyId);
+
+    console.log('[ReconcileStore] 差异已忽略:', discrepancyId, '处理人:', resolvedBy);
     return true;
   },
 

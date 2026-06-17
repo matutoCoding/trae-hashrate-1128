@@ -33,7 +33,7 @@ const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
     <View className={styles.container}>
       <View className={styles.legend}>
         <View className={styles.legendItem}>
-          <View className={classnames(styles.legendDot, styles.availableDot} />
+          <View className={classnames(styles.legendDot, styles.availableDot)} />
           <Text className={styles.legendText}>可预约</Text>
         </View>
         <View className={styles.legendItem}>
@@ -41,7 +41,7 @@ const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
           <Text className={styles.legendText}>已释放</Text>
         </View>
         <View className={styles.legendItem}>
-          <View className={classnames(styles.legendDot, styles.bookedDot} />
+          <View className={classnames(styles.legendDot, styles.bookedDot)} />
           <Text className={styles.legendText}>已预约</Text>
         </View>
         <View className={styles.legendItem}>
