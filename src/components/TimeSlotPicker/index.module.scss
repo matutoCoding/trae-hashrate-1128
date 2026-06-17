@@ -1,0 +1,112 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  width: 100%;
+}
+
+.legend {
+  display: flex;
+  justify-content: space-around;
+  padding: $spacing-md 0;
+  margin-bottom: $spacing-md;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+}
+
+.legendDot {
+  width: 24rpx;
+  height: 24rpx;
+  border-radius: $radius-xs;
+  margin-right: $spacing-xs;
+}
+
+.availableDot {
+  background: $color-success;
+}
+
+.releasedDot {
+  background: $color-warning;
+}
+
+.bookedDot {
+  background: $color-border;
+}
+
+.selectedDot {
+  background: $color-primary;
+}
+
+.legendText {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+.slotGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.slot {
+  width: calc(25% - 12rpx);
+  height: 100rpx;
+  border-radius: $radius-md;
+  border: 2rpx solid $color-border;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: $color-bg-card;
+  transition: all $transition-fast;
+
+  &.clickable {
+    border-color: $color-success;
+    background: rgba(5, 150, 105, 0.05);
+  }
+
+  &.released {
+    border-color: $color-warning;
+    background: rgba(217, 119, 6, 0.05);
+  }
+
+  &.booked,
+  &.occupied {
+    background: $color-bg-hover;
+    border-color: $color-border;
+    opacity: 0.6;
+  }
+
+  &.selected {
+    background: $color-primary;
+    border-color: $color-primary;
+
+    .slotTime,
+    .slotStatus {
+      color: $color-text-white;
+    }
+  }
+
+  &:active.clickable {
+    transform: scale(0.95);
+  }
+}
+
+.slotTime {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+}
+
+.slotStatus {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: 4rpx;
+}
+
+.booked .slotTime,
+.occupied .slotTime {
+  color: $color-text-tertiary;
+}

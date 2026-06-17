@@ -1,0 +1,381 @@
+@import '@/styles/theme.scss';
+@import '@/styles/variables.scss';
+
+.page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #F0F9FF 0%, #F8FAFC 100%);
+  padding-bottom: 40px;
+}
+
+.header {
+  padding: 48px 32px 32px;
+  background: linear-gradient(135deg, $color-primary 0%, #1D4ED8 100%);
+  border-radius: 0 0 40px 40px;
+}
+
+.headerTitle {
+  font-size: 40px;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 56px;
+}
+
+.headerSubtitle {
+  font-size: 26px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 36px;
+  margin-top: 8px;
+}
+
+.summaryRow {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 32px;
+  gap: 16px;
+}
+
+.summaryCard {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 24px;
+  padding: 24px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.summaryValue {
+  font-size: 32px;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 44px;
+}
+
+.summaryLabel {
+  font-size: 22px;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 30px;
+  margin-top: 8px;
+}
+
+.summaryValueAlert {
+  color: #FCA5A5;
+}
+
+.tabs {
+  display: flex;
+  padding: 24px 32px 0;
+  gap: 16px;
+}
+
+.tabItem {
+  flex: 1;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #FFFFFF;
+  border-radius: 16px;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.tabItem.active {
+  border-color: $color-primary;
+  background: rgba(37, 99, 235, 0.05);
+}
+
+.tabText {
+  font-size: 28px;
+  font-weight: 500;
+  color: $color-text-secondary;
+  line-height: 40px;
+}
+
+.tabItem.active .tabText {
+  color: $color-primary;
+  font-weight: 600;
+}
+
+.content {
+  padding: 24px 32px;
+  height: calc(100vh - 520px);
+}
+
+.sectionTitle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 8px 0 16px;
+}
+
+.sectionTitle:first-child {
+  margin-top: 0;
+}
+
+.sectionTitle Text:first-child {
+  font-size: 30px;
+  font-weight: 600;
+  color: $color-text-primary;
+  line-height: 42px;
+}
+
+.sectionAction {
+  font-size: 26px;
+  color: $color-primary;
+  line-height: 36px;
+}
+
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.statCard {
+  background: #FFFFFF;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+.statValue {
+  font-size: 36px;
+  font-weight: 700;
+  color: $color-text-primary;
+  line-height: 48px;
+}
+
+.statValue.income {
+  color: $color-success;
+}
+
+.statValue.expense {
+  color: $color-error;
+}
+
+.statValue.diff {
+  color: $color-error;
+}
+
+.statLabel {
+  font-size: 24px;
+  color: $color-text-tertiary;
+  line-height: 32px;
+  margin-top: 8px;
+}
+
+.statSubvalue {
+  font-size: 22px;
+  color: $color-text-tertiary;
+  line-height: 30px;
+  margin-top: 4px;
+}
+
+.actionCard {
+  background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%);
+  border-radius: 20px;
+  padding: 32px;
+  margin-bottom: 24px;
+  border: 1px solid #A7F3D0;
+}
+
+.actionCardTitle {
+  font-size: 30px;
+  font-weight: 600;
+  color: $color-success;
+  line-height: 42px;
+}
+
+.actionCardDesc {
+  font-size: 24px;
+  color: #065F46;
+  line-height: 36px;
+  margin-top: 8px;
+}
+
+.actionBtn {
+  margin-top: 24px;
+  height: 80px;
+  background: $color-success;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btnText {
+  font-size: 28px;
+  font-weight: 600;
+  color: #FFFFFF;
+  line-height: 40px;
+}
+
+.historyCard {
+  background: #FFFFFF;
+  border-radius: 20px;
+  padding: 24px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+.historyHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.historyPeriod {
+  font-size: 28px;
+  font-weight: 600;
+  color: $color-text-primary;
+  line-height: 40px;
+}
+
+.historyStatus {
+  font-size: 24px;
+  color: $color-success;
+  line-height: 32px;
+}
+
+.historyStats {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid $color-border-light;
+}
+
+.historyStatItem {
+  text-align: center;
+  flex: 1;
+}
+
+.historyStatValue {
+  font-size: 26px;
+  font-weight: 600;
+  color: $color-text-primary;
+  line-height: 36px;
+}
+
+.historyStatLabel {
+  font-size: 22px;
+  color: $color-text-tertiary;
+  line-height: 30px;
+  margin-top: 4px;
+}
+
+.historyStatValue.alert {
+  color: $color-error;
+}
+
+.historyTime {
+  font-size: 22px;
+  color: $color-text-tertiary;
+  line-height: 30px;
+  margin-top: 16px;
+}
+
+.loadingContainer {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loadingText {
+  font-size: 28px;
+  color: $color-text-tertiary;
+  line-height: 40px;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80px 0;
+}
+
+.emptyIcon {
+  width: 120px;
+  height: 120px;
+  border-radius: 60px;
+  background: $color-bg-light;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.emptyIcon .iconText {
+  font-size: 56px;
+  line-height: 1;
+}
+
+.emptyText {
+  font-size: 30px;
+  font-weight: 500;
+  color: $color-text-secondary;
+  line-height: 42px;
+}
+
+.emptySubtext {
+  font-size: 24px;
+  color: $color-text-tertiary;
+  line-height: 36px;
+  margin-top: 8px;
+}
+
+.flowSection {
+  background: #FFFFFF;
+  border-radius: 20px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+.flowTitle {
+  font-size: 28px;
+  font-weight: 600;
+  color: $color-text-primary;
+  line-height: 40px;
+  margin-bottom: 16px;
+}
+
+.flowSummary {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid $color-border-light;
+}
+
+.flowSummaryItem {
+  display: flex;
+  flex-direction: column;
+}
+
+.flowSummaryLabel {
+  font-size: 22px;
+  color: $color-text-tertiary;
+  line-height: 30px;
+}
+
+.flowSummaryValue {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 40px;
+  margin-top: 4px;
+}
+
+.flowSummaryValue.income {
+  color: $color-success;
+}
+
+.flowSummaryValue.expense {
+  color: $color-error;
+}
+
+.flowSummaryValue.net {
+  color: $color-primary;
+}

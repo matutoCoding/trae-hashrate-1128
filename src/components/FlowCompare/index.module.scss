@@ -1,0 +1,92 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  width: 100%;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  background: $color-bg-page;
+  padding: $spacing-md $spacing-sm;
+  border-bottom: 1rpx solid $color-border;
+}
+
+.headerCol {
+  flex: 1;
+  text-align: center;
+}
+
+.headerText {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  color: $color-text-secondary;
+}
+
+.list {
+  max-height: 600rpx;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  padding: $spacing-md $spacing-sm;
+  border-bottom: 1rpx solid $color-divider;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &.rowMismatch {
+    background: rgba(220, 38, 38, 0.03);
+  }
+}
+
+.col {
+  flex: 1;
+  text-align: center;
+  padding: 0 $spacing-xs;
+}
+
+.orderNo {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  display: block;
+  @include text-ellipsis;
+}
+
+.time {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+  display: block;
+  margin-top: 4rpx;
+}
+
+.amount {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  display: block;
+}
+
+.income {
+  color: $color-success;
+}
+
+.expense {
+  color: $color-error;
+}
+
+.typeText {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+  display: block;
+  margin-top: 4rpx;
+}
+
+.missingText {
+  font-size: $font-size-sm;
+  color: $color-text-disabled;
+}

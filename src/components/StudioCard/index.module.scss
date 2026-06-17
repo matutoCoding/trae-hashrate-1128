@@ -1,0 +1,122 @@
+@use '@/styles/variables.scss' as *;
+
+.card {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-md;
+  overflow: hidden;
+  transition: all $transition-base;
+
+  &:active {
+    transform: scale(0.98);
+    box-shadow: $shadow-card-hover;
+  }
+}
+
+.imageContainer {
+  position: relative;
+  width: 100%;
+  height: 280rpx;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.statusBadge {
+  position: absolute;
+  top: $spacing-md;
+  left: $spacing-md;
+}
+
+.content {
+  padding: $spacing-lg;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: $spacing-sm;
+}
+
+.name {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  flex: 1;
+  @include text-ellipsis;
+}
+
+.price {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+  margin-left: $spacing-md;
+}
+
+.priceUnit {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-normal;
+  color: $color-text-tertiary;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  margin-bottom: $spacing-md;
+}
+
+.type,
+.area,
+.capacity {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.dot {
+  color: $color-text-tertiary;
+  margin: 0 $spacing-sm;
+}
+
+.features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+}
+
+.featureTag {
+  background: $color-bg-tag;
+  border-radius: $radius-xs;
+  padding: $spacing-xs $spacing-sm;
+}
+
+.featureText {
+  font-size: $font-size-xs;
+  color: $color-primary;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: $spacing-md;
+  border-top: 1rpx solid $color-divider;
+}
+
+.address {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  flex: 1;
+  @include text-ellipsis;
+}
+
+.deposit {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-left: $spacing-md;
+}

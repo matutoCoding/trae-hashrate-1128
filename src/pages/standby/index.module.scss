@@ -1,0 +1,367 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  background: $color-bg-page;
+}
+
+.header {
+  background: linear-gradient(135deg, $color-warning 0%, $color-warning-light 100%);
+  padding: $spacing-lg $page-padding;
+  padding-top: calc($spacing-lg + env(safe-area-inset-top));
+}
+
+.headerTitle {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+  margin-bottom: $spacing-xs;
+}
+
+.headerSubtitle {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.statsRow {
+  display: flex;
+  justify-content: space-around;
+  margin-top: $spacing-lg;
+}
+
+.statItem {
+  text-align: center;
+}
+
+.statValue {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+  display: block;
+}
+
+.statLabel {
+  font-size: $font-size-xs;
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: 4rpx;
+  display: block;
+}
+
+.tabs {
+  display: flex;
+  background: $color-bg-card;
+  padding: $spacing-sm $page-padding;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.tabItem {
+  flex: 1;
+  text-align: center;
+  padding: $spacing-md 0;
+  position: relative;
+  transition: all $transition-fast;
+
+  &.active {
+    .tabText {
+      color: $color-warning;
+      font-weight: $font-weight-semibold;
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 48rpx;
+      height: 6rpx;
+      background: $color-warning;
+      border-radius: 3rpx;
+    }
+  }
+}
+
+.tabText {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+}
+
+.content {
+  padding: $spacing-md $page-padding;
+  padding-bottom: calc(160rpx + env(safe-area-inset-bottom));
+}
+
+.sectionTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sectionAction {
+  font-size: $font-size-sm;
+  color: $color-warning;
+  font-weight: $font-weight-normal;
+}
+
+.notificationCard {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, rgba(37, 99, 235, 0.1) 100%);
+  border: 1rpx solid rgba(37, 99, 235, 0.2);
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+}
+
+.notificationHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+}
+
+.notificationInfo {
+  flex: 1;
+}
+
+.notificationStudio {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-xs;
+}
+
+.notificationTime {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.countdownBadge {
+  background: $color-primary;
+  border-radius: $radius-round;
+  padding: $spacing-xs $spacing-md;
+}
+
+.countdownText {
+  font-size: $font-size-sm;
+  color: $color-text-white;
+  font-weight: $font-weight-semibold;
+}
+
+.notificationMessage {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+  margin-bottom: $spacing-lg;
+}
+
+.notificationActions {
+  display: flex;
+  gap: $spacing-md;
+}
+
+.actionBtn {
+  @include button-reset;
+  flex: 1;
+  height: $button-height-md;
+  border-radius: $radius-button;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  transition: all $transition-fast;
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.confirmBtn {
+  background: $color-success;
+
+  .btnText {
+    color: $color-text-white;
+  }
+}
+
+.cancelBtn {
+  background: $color-bg-hover;
+  border: 1rpx solid $color-border;
+
+  .btnText {
+    color: $color-text-secondary;
+  }
+}
+
+.btnText {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+}
+
+.notificationList {
+  margin-bottom: $spacing-lg;
+}
+
+.notificationItem {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  margin-bottom: $spacing-sm;
+  display: flex;
+  align-items: center;
+  transition: all $transition-fast;
+
+  &:active {
+    background: $color-bg-hover;
+  }
+
+  &.unread {
+    background: rgba(37, 99, 235, 0.03);
+    border-left: 6rpx solid $color-primary;
+  }
+}
+
+.notificationDot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: $radius-round;
+  background: $color-primary;
+  margin-right: $spacing-md;
+  flex-shrink: 0;
+}
+
+.notificationContent {
+  flex: 1;
+}
+
+.notificationMsg {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  margin-bottom: 4rpx;
+  display: block;
+  @include text-ellipsis;
+}
+
+.notificationDate {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.addStandbyCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+  border: 2rpx dashed $color-border;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all $transition-fast;
+
+  &:active {
+    background: $color-bg-hover;
+    border-color: $color-warning;
+  }
+}
+
+.addStandbyIcon {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: $radius-round;
+  background: rgba(217, 119, 6, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: $spacing-md;
+
+  .iconText {
+    font-size: $font-size-lg;
+    color: $color-warning;
+    font-weight: $font-weight-bold;
+  }
+}
+
+.addStandbyText {
+  font-size: $font-size-md;
+  color: $color-warning;
+  font-weight: $font-weight-medium;
+}
+
+.ruleCard {
+  background: rgba(217, 119, 6, 0.05);
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+}
+
+.ruleTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-warning;
+  margin-bottom: $spacing-md;
+}
+
+.ruleList {
+  padding-left: $spacing-md;
+}
+
+.ruleItem {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: $line-height-loose;
+  margin-bottom: $spacing-xs;
+
+  &::before {
+    content: '•';
+    color: $color-warning;
+    margin-right: $spacing-sm;
+  }
+}
+
+.myStandbySection {
+  margin-top: $spacing-lg;
+}
+
+.emptyState {
+  padding: $spacing-xl * 2;
+  text-align: center;
+}
+
+.emptyIcon {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: $radius-round;
+  background: $color-bg-hover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto $spacing-md;
+
+  .iconText {
+    font-size: 48rpx;
+    color: $color-text-tertiary;
+  }
+}
+
+.emptyText {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-xs;
+}
+
+.emptySubtext {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.loadingContainer {
+  padding: $spacing-xl * 2;
+  text-align: center;
+}
+
+.loadingText {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}

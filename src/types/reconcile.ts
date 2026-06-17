@@ -1,0 +1,88 @@
+export interface FlowRecord {
+  id: string;
+  orderNo: string;
+  type: 'income' | 'expense';
+  amount: number;
+  subject: string;
+  description: string;
+  source: 'platform' | 'photographer';
+  relatedBookingId?: string;
+  relatedStudioId?: string;
+  relatedStudioName?: string;
+  photographerId?: string;
+  photographerName?: string;
+  transactionTime: string;
+  createdAt: string;
+}
+
+export type FlowSource = FlowRecord['source'];
+export type FlowType = FlowRecord['type'];
+
+export const FLOW_SOURCE_TEXT: Record<FlowSource, string> = {
+  platform: '平台',
+  photographer: '摄影师'
+};
+
+export const FLOW_TYPE_TEXT: Record<FlowType, string> = {
+  income: '收入',
+  expense: '支出'
+};
+
+export interface ReconcileResult {
+  id: string;
+  period: string;
+  startDate: string;
+  endDate: string;
+  platformTotalIncome: number;
+  platformTotalExpense: number;
+  platformNetAmount: number;
+  photographerTotalIncome: number;
+  photographerTotalExpense: number;
+  photographerNetAmount: number;
+  matchedCount: number;
+  discrepancyCount: number;
+  status: 'pending' | 'processing' | 'completed';
+  createdAt: string;
+  completedAt?: string;
+}
+
+export interface DiscrepancyRecord {
+  id: string;
+  reconcileId: string;
+  platformFlow?: FlowRecord;
+  photographerFlow?: FlowRecord;
+  orderNo: string;
+  type: 'amount_mismatch' | 'missing_platform' | 'missing_photographer' | 'type_mismatch' | 'other';
+  platformAmount: number;
+  photographerAmount: number;
+  diffAmount: number;
+  status: 'pending' | 'resolved' | 'ignored';
+  resolvedBy?: string;
+  resolvedAt?: string;
+  resolution?: string;
+  remark?: string;
+  createdAt: string;
+}
+
+export type DiscrepancyType = DiscrepancyRecord['type'];
+export type DiscrepancyStatus = DiscrepancyRecord['status'];
+
+export const DISCREPANCY_TYPE_TEXT: Record<DiscrepancyType, string> = {
+  amount_mismatch: '金额不符',
+  missing_platform: '平台缺单',
+  missing_photographer: '摄影师缺单',
+  type_mismatch: '类型不符',
+  other: '其他差异'
+};
+
+export const DISCREPANCY_STATUS_TEXT: Record<DiscrepancyStatus, string> = {
+  pending: '待处理',
+  resolved: '已解决',
+  ignored: '已忽略'
+};
+
+export const DISCREPANCY_STATUS_COLOR: Record<DiscrepancyStatus, string> = {
+  pending: '#DC2626',
+  resolved: '#059669',
+  ignored: '#64748B'
+};
