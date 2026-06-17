@@ -46,6 +46,15 @@ export interface ReconcileResult {
   completedAt?: string;
 }
 
+export interface DiscrepancyLog {
+  id: string;
+  discrepancyId: string;
+  action: 'created' | 'resolved' | 'ignored' | 'reopened';
+  operator: string;
+  remark: string;
+  createdAt: string;
+}
+
 export interface DiscrepancyRecord {
   id: string;
   reconcileId: string;
@@ -61,6 +70,7 @@ export interface DiscrepancyRecord {
   resolvedAt?: string;
   resolution?: string;
   remark?: string;
+  logs: DiscrepancyLog[];
   createdAt: string;
 }
 
@@ -86,3 +96,39 @@ export const DISCREPANCY_STATUS_COLOR: Record<DiscrepancyStatus, string> = {
   resolved: '#059669',
   ignored: '#64748B'
 };
+
+export type DiscrepancyLogAction = DiscrepancyLog['action'];
+
+export const DISCREPANCY_LOG_ACTION_TEXT: Record<DiscrepancyLogAction, string> = {
+  created: '创建差异',
+  resolved: '标记解决',
+  ignored: '忽略差异',
+  reopened: '重新打开'
+};
+
+export const DISCREPANCY_LOG_ACTION_COLOR: Record<DiscrepancyLogAction, string> = {
+  created: '#64748B',
+  resolved: '#059669',
+  ignored: '#64748B',
+  reopened: '#DC2626'
+};
+
+export interface PhotographerSettlement {
+  photographerId: string;
+  photographerName: string;
+  platformIncome: number;
+  platformExpense: number;
+  platformNet: number;
+  photographerIncome: number;
+  photographerExpense: number;
+  photographerNet: number;
+  diffAmount: number;
+  orderCount: number;
+  discrepancyCount: number;
+  pendingDiscrepancyCount: number;
+}
+
+export interface SettlementFilter {
+  startDate: string;
+  endDate: string;
+}

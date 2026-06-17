@@ -90,6 +90,12 @@ const ReconcilePage: React.FC = () => {
     Taro.switchTab({ url: '/pages/discrepancy/index' });
   };
 
+  const handleViewSettlement = () => {
+    Taro.navigateTo({
+      url: '/pages/settlement/index'
+    });
+  };
+
   const handleViewFlowDetail = (orderNo: string) => {
     Taro.navigateTo({
       url: `/pages/flow-detail/index?orderNo=${orderNo}`
@@ -194,6 +200,17 @@ const ReconcilePage: React.FC = () => {
               >
                 <Text className={styles.btnText}>{reconciling ? '对账中...' : '开始对账'}</Text>
               </Button>
+            </View>
+
+            <View className={styles.settlementEntry} onClick={handleViewSettlement}>
+              <View className={styles.settlementIcon}>
+                <Text>💰</Text>
+              </View>
+              <View className={styles.settlementContent}>
+                <Text className={styles.settlementTitle}>摄影师结算汇总</Text>
+                <Text className={styles.settlementDesc}>按摄影师查看收入、支出与差异明细</Text>
+              </View>
+              <Text className={styles.settlementArrow}>›</Text>
             </View>
 
             {summary.pendingDiscrepancyCount > 0 && (

@@ -9,8 +9,11 @@ import { formatCurrency } from '@/utils/amount';
 import { formatDateTime } from '@/utils/date';
 import {
   DiscrepancyRecord,
+  DiscrepancyLog,
   DISCREPANCY_TYPE_TEXT,
   DISCREPANCY_STATUS_TEXT,
+  DISCREPANCY_LOG_ACTION_TEXT,
+  DISCREPANCY_LOG_ACTION_COLOR,
   FLOW_TYPE_TEXT
 } from '@/types/reconcile';
 
@@ -20,6 +23,7 @@ const DiscrepancyDetailPage: React.FC = () => {
     fetchDiscrepancies,
     resolveDiscrepancy,
     ignoreDiscrepancy,
+    reopenDiscrepancy,
     loading,
     initReconcile,
     getDiscrepancyById
@@ -117,6 +121,30 @@ const DiscrepancyDetailPage: React.FC = () => {
             Taro.showToast({ title: '已忽略', icon: 'success' });
           } catch (e) {
             console.error('[DiscrepancyDetailPage] 忽略失败:', e);
+            Taro.showToast({ title: '操作失败', icon: 'error' });
+          }
+        }
+      }
+    });
+  };
+
+  const handleReopen = () => {
+    Taro.showModal({
+      title: '重新打开差异',
+      content: '确定重新打开此差异吗？重新打开后状态将变为待处理。',
+      confirmText: '确认打开',
+      confirmColor: '#DC2626',
+      success: async (res) => {
+        if (res.confirm) {
+          try {
+            await reopenDiscrepancy(id, '需进一步核实，重新打开', '当前用户');
+            const updated = getDiscrepancyById(id);
+            if (updated) {
+              setDiscrepancy(updated);
+            }
+            Taro.showToast({ title: '已重新打开', icon: 'success' });
+          } catch (e) {
+            console.error('[DiscrepancyDetailPage] 重新打开失败:', e);
             Taro.showToast({ title: '操作失败', icon: 'error' });
           }
         }
@@ -258,6 +286,39 @@ const DiscrepancyDetailPage: React.FC = () => {
           </View>
         )}
 
+        <View className={styles.logTimeline}>
+          <View className={styles.sectionTitle}>
+            <Text>处理日志</Text>
+            <Text className={styles.logCount}>{discrepancy.logs.length}条记录</Text>
+          </View>
+          {discrepancy.logs
+            .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+            .map((log: DiscrepancyLog, index: number) => (
+            <View key={log.id} className={styles.logItem}>
+              <View className={styles.logDotLine}>
+                <View
+                  className={styles.logDot}
+                  style={{ backgroundColor: DISCREPANCY_LOG_ACTION_COLOR[log.action] }}
+                />
+                {index < discrepancy.logs.length - 1 && <View className={styles.logLine} />}
+              </View>
+              <View className={styles.logContent}>
+                <View className={styles.logHeader}>
+                  <Text
+                    className={styles.logAction}
+                    style={{ color: DISCREPANCY_LOG_ACTION_COLOR[log.action] }}
+                  >
+                    {DISCREPANCY_LOG_ACTION_TEXT[log.action]}
+                  </Text>
+                  <Text className={styles.logTime}>{formatDateTime(log.createdAt)}</Text>
+                </View>
+                <Text className={styles.logOperator}>操作人：{log.operator}</Text>
+                <Text className={styles.logRemark}>{log.remark}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+
         <View className={styles.flowPreview}>
           <View className={styles.sectionTitle}>
             <Text>流水明细</Text>
@@ -321,22 +382,31 @@ const DiscrepancyDetailPage: React.FC = () => {
         </View>
       </ScrollView>
 
-      {discrepancy.status === 'pending' && (
-        <View className={styles.bottomBar}>
+      <View className={styles.bottomBar}>
+        {discrepancy.status === 'pending' ? (
+          <>
+            <Button
+              className={classnames(styles.actionBtn, styles.ignore)}
+              onClick={handleIgnore}
+            >
+              <Text>忽略</Text>
+            </Button>
+            <Button
+              className={classnames(styles.actionBtn, styles.resolve)}
+              onClick={handleResolve}
+            >
+              <Text>标记解决</Text>
+            </Button>
+          </>
+        ) : (
           <Button
-            className={classnames(styles.actionBtn, styles.ignore)}
-            onClick={handleIgnore}
+            className={classnames(styles.actionBtn, styles.reopen)}
+            onClick={handleReopen}
           >
-            <Text>忽略</Text>
+            <Text>重新打开</Text>
           </Button>
-          <Button
-            className={classnames(styles.actionBtn, styles.resolve)}
-            onClick={handleResolve}
-          >
-            <Text>标记解决</Text>
-          </Button>
-        </View>
-      )}
+        )}
+      </View>
     </View>
   );
 };

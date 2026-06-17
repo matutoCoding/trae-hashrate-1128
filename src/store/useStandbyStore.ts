@@ -25,6 +25,7 @@ interface StandbyState {
   markAllNotificationsRead: () => void;
   getUnreadCount: () => number;
   getQueuePosition: (studioId: string, date: string, startTime: string, userId: string) => number;
+  getUserQueuePositions: (userId: string) => { standbyId: string; position: number; total: number }[];
   expireStandby: (standbyId: string) => boolean;
   checkAndExpireNotifications: () => StandbyRecord[];
 }
@@ -135,7 +136,7 @@ export const useStandbyStore = create<StandbyState>((set, get) => ({
     };
 
     set(state => ({
-      standbyRecords: [newStandby, ...state.standbyRecords]
+      standbyRecords: [...state.standbyRecords, newStandby]
     }));
 
     console.log('[StandbyStore] 创建候补成功:', newStandby.id, '队列位置:', newPosition);
@@ -263,31 +264,19 @@ export const useStandbyStore = create<StandbyState>((set, get) => ({
 
       if (expired) {
         const expiredRecord = updated.find(s => s.id === standbyId)!;
-        const nextWaiting = updated
-          .filter(s =>
-            s.studioId === expiredRecord.studioId &&
-            s.date === expiredRecord.date &&
-            s.startTime === expiredRecord.startTime &&
-            s.status === 'waiting'
-          )
-          .sort((a, b) => a.queuePosition - b.queuePosition)[0];
+        const expiredPos = expiredRecord.queuePosition;
 
-        if (nextWaiting) {
-          const advanced = updated.map(s => {
-            if (s.id === nextWaiting.id) {
-              return { ...s, queuePosition: s.queuePosition - 1 };
-            }
-            if (s.status === 'waiting' &&
-                s.studioId === expiredRecord.studioId &&
-                s.date === expiredRecord.date &&
-                s.startTime === expiredRecord.startTime &&
-                s.queuePosition > expiredRecord.queuePosition) {
-              return { ...s, queuePosition: s.queuePosition - 1 };
-            }
-            return s;
-          });
-          return { standbyRecords: advanced };
-        }
+        const advanced = updated.map(s => {
+          if (s.status === 'waiting' &&
+              s.studioId === expiredRecord.studioId &&
+              s.date === expiredRecord.date &&
+              s.startTime === expiredRecord.startTime &&
+              s.queuePosition > expiredPos) {
+            return { ...s, queuePosition: s.queuePosition - 1 };
+          }
+          return s;
+        });
+        return { standbyRecords: advanced };
       }
 
       return { standbyRecords: updated };
@@ -375,6 +364,28 @@ export const useStandbyStore = create<StandbyState>((set, get) => ({
            (s.status === 'waiting' || s.status === 'notified')
     );
     return record?.queuePosition || -1;
+  },
+
+  getUserQueuePositions: (userId: string): { standbyId: string; position: number; total: number }[] => {
+    const { standbyRecords } = get();
+    const userRecords = standbyRecords.filter(
+      s => s.userId === userId && (s.status === 'waiting' || s.status === 'notified')
+    );
+
+    return userRecords.map(record => {
+      const totalInQueue = standbyRecords.filter(
+        s => s.studioId === record.studioId &&
+             s.date === record.date &&
+             s.startTime === record.startTime &&
+             (s.status === 'waiting' || s.status === 'notified')
+      ).length;
+
+      return {
+        standbyId: record.id,
+        position: record.queuePosition,
+        total: totalInQueue
+      };
+    });
   },
 
   checkAndExpireNotifications: (): StandbyRecord[] => {

@@ -419,6 +419,88 @@
     background: linear-gradient(135deg, $color-success 0%, $color-success-light 100%);
     color: $color-text-white;
   }
+
+  &.reopen {
+    background: linear-gradient(135deg, $color-error 0%, $color-error-light 100%);
+    color: $color-text-white;
+  }
+}
+
+.logTimeline {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.logCount {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  font-weight: $font-weight-regular;
+  margin-left: auto;
+}
+
+.logItem {
+  display: flex;
+  gap: $spacing-md;
+  padding: $spacing-sm 0;
+}
+
+.logDotLine {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 24rpx;
+  flex-shrink: 0;
+}
+
+.logDot {
+  width: 24rpx;
+  height: 24rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.logLine {
+  width: 2rpx;
+  flex: 1;
+  background: $color-divider;
+  margin-top: $spacing-xs;
+}
+
+.logContent {
+  flex: 1;
+  padding-bottom: $spacing-sm;
+}
+
+.logHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-xs;
+}
+
+.logAction {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+}
+
+.logTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.logOperator {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-xs;
+}
+
+.logRemark {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  line-height: $line-height-loose;
 }
 
 .loadingContainer {

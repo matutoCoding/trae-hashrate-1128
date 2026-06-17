@@ -27,7 +27,8 @@ const StandbyPage: React.FC = () => {
     getUnreadCount,
     markAllNotificationsRead,
     initStandby,
-    checkAndExpireNotifications
+    checkAndExpireNotifications,
+    getUserQueuePositions
   } = useStandbyStore();
   const { studios, fetchStudios, initStudios } = useStudioStore();
 
@@ -332,6 +333,36 @@ const StandbyPage: React.FC = () => {
 
         {activeTab === 'my' && (
           <View className={styles.myStandbySection}>
+            {myRecords.filter(s => s.status === 'waiting' || s.status === 'notified').length > 0 && (
+              <View className={styles.myPositionCard}>
+                <Text className={styles.myPositionTitle}>我的排队位置</Text>
+                <View className={styles.myPositionList}>
+                  {getUserQueuePositions('user-current').map(pos => {
+                    const record = myRecords.find(r => r.id === pos.standbyId);
+                    if (!record) return null;
+                    return (
+                      <View key={pos.standbyId} className={styles.myPositionItem}>
+                        <View className={styles.myPositionInfo}>
+                          <Text className={styles.myPositionStudio}>{record.studioName}</Text>
+                          <Text className={styles.myPositionTime}>
+                            {record.date} {record.startTime}-{record.endTime}
+                          </Text>
+                        </View>
+                        <View className={styles.myPositionBadge}>
+                          <Text className={styles.myPositionNum}>{pos.position}</Text>
+                          <Text className={styles.myPositionTotal}>/{pos.total}</Text>
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
+
+            <View className={styles.sectionTitle}>
+              <Text>全部候补记录</Text>
+            </View>
+
             <StandbyQueue
               records={myRecords}
               onConfirm={handleConfirm}

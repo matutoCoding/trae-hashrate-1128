@@ -85,6 +85,15 @@
   &:last-child {
     border-bottom: none;
   }
+
+  &.currentUser {
+    background: linear-gradient(90deg, rgba(37, 99, 235, 0.08) 0%, transparent 100%);
+    margin: 0 (-$spacing-md);
+    padding: $spacing-md;
+    border-radius: $radius-md;
+    border-bottom: none;
+    margin-bottom: $spacing-xs;
+  }
 }
 
 .positionBadge {
@@ -97,6 +106,13 @@
   justify-content: center;
   margin-right: $spacing-md;
   flex-shrink: 0;
+
+  &.firstPosition {
+    background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    width: 64rpx;
+    height: 64rpx;
+  }
 }
 
 .positionText {

@@ -59,12 +59,19 @@ const StandbyQueue: React.FC<StandbyQueueProps> = ({ records, onConfirm, onCance
           </View>
 
           <View className={styles.queueList}>
-            {group.records.map((record, index) => {
+            {group.records
+              .sort((a, b) => {
+                if (a.status === 'notified' && b.status !== 'notified') return -1;
+                if (b.status === 'notified' && a.status !== 'notified') return 1;
+                return a.queuePosition - b.queuePosition;
+              })
+              .map((record) => {
               const statusColor = STANDBY_STATUS_COLOR[record.status];
+              const isCurrentUser = record.userId === 'user-current';
               return (
-                <View key={record.id} className={styles.queueItem}>
-                  <View className={styles.positionBadge}>
-                    <Text className={styles.positionText}>{index + 1}</Text>
+                <View key={record.id} className={classnames(styles.queueItem, isCurrentUser && styles.currentUser)}>
+                  <View className={classnames(styles.positionBadge, record.queuePosition === 1 && styles.firstPosition)}>
+                    <Text className={styles.positionText}>{record.queuePosition}</Text>
                   </View>
 
                   <View className={styles.userInfo}>

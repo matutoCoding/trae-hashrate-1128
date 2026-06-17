@@ -19,10 +19,12 @@ const DiscrepancyPage: React.FC = () => {
     loading,
     fetchDiscrepancies,
     resolveDiscrepancy,
-    ignoreDiscrepancy
+    ignoreDiscrepancy,
+    getRecentlyHandledDiscrepancies,
+    initReconcile
   } = useReconcileStore();
 
-  const [activeTab, setActiveTab] = useState<DiscrepancyStatus | 'all'>('pending');
+  const [activeTab, setActiveTab] = useState<DiscrepancyStatus | 'all' | 'recent'>('pending');
   const [filterType, setFilterType] = useState<DiscrepancyType | 'all'>('all');
 
   React.useEffect(() => {
@@ -40,6 +42,7 @@ const DiscrepancyPage: React.FC = () => {
 
   const initData = async () => {
     console.log('[DiscrepancyPage] 初始化数据');
+    initReconcile();
     await fetchDiscrepancies();
   };
 
@@ -47,11 +50,22 @@ const DiscrepancyPage: React.FC = () => {
   const resolvedCount = discrepancies.filter(d => d.status === 'resolved').length;
   const ignoredCount = discrepancies.filter(d => d.status === 'ignored').length;
 
-  const filteredDiscrepancies = discrepancies.filter(d => {
-    const statusMatch = activeTab === 'all' || d.status === activeTab;
-    const typeMatch = filterType === 'all' || d.type === filterType;
-    return statusMatch && typeMatch;
-  });
+  const recentCount = discrepancies.filter(d => d.status !== 'pending').length;
+
+  const getFilteredDiscrepancies = () => {
+    let list = discrepancies;
+    if (activeTab === 'recent') {
+      list = getRecentlyHandledDiscrepancies();
+    } else if (activeTab !== 'all') {
+      list = list.filter(d => d.status === activeTab);
+    }
+    if (filterType !== 'all') {
+      list = list.filter(d => d.type === filterType);
+    }
+    return list;
+  };
+
+  const filteredDiscrepancies = getFilteredDiscrepancies();
 
   const pendingDiscrepancies = discrepancies.filter(d => d.status === 'pending');
   const totalDiffAmount = pendingDiscrepancies.reduce((sum, d) => sum + Math.abs(d.diffAmount), 0);
@@ -198,6 +212,17 @@ const DiscrepancyPage: React.FC = () => {
           {pendingCount > 0 && (
             <View className={styles.tabBadge}>
               <Text>{pendingCount}</Text>
+            </View>
+          )}
+        </View>
+        <View
+          className={classnames(styles.tabItem, activeTab === 'recent' && styles.active)}
+          onClick={() => setActiveTab('recent')}
+        >
+          <Text className={styles.tabText}>最近处理</Text>
+          {recentCount > 0 && (
+            <View className={styles.tabBadge}>
+              <Text>{recentCount}</Text>
             </View>
           )}
         </View>

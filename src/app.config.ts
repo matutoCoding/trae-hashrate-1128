@@ -4,6 +4,8 @@ export default defineAppConfig({
     'pages/standby/index',
     'pages/reconcile/index',
     'pages/discrepancy/index',
+    'pages/settlement/index',
+    'pages/settlement-detail/index',
     'pages/studio-detail/index',
     'pages/booking-confirm/index',
     'pages/order-list/index',

@@ -320,8 +320,73 @@
   }
 }
 
+.myPositionCard {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-lg;
+  color: $color-text-white;
+  box-shadow: $shadow-card;
+}
+
+.myPositionTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  margin-bottom: $spacing-md;
+  opacity: 0.95;
+  display: block;
+}
+
+.myPositionList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.myPositionItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: $radius-md;
+  padding: $spacing-sm $spacing-md;
+  backdrop-filter: blur(10px);
+}
+
+.myPositionInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.myPositionStudio {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+}
+
+.myPositionTime {
+  font-size: $font-size-xs;
+  opacity: 0.9;
+}
+
+.myPositionBadge {
+  display: flex;
+  align-items: baseline;
+}
+
+.myPositionNum {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  line-height: 1;
+}
+
+.myPositionTotal {
+  font-size: $font-size-sm;
+  opacity: 0.8;
+}
+
 .myStandbySection {
-  margin-top: $spacing-lg;
+  margin-top: 0;
 }
 
 .emptyState {
